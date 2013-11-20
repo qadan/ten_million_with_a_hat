@@ -1,0 +1,6 @@
+name = Ten Million with a Hat
+description = Ingests lots of objects.
+core = 7.x
+version = 7.x-dev
+dependencies[] = islandora
+package = Islandora Tools
