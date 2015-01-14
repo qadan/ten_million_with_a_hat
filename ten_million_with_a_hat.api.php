@@ -46,9 +46,6 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
  *   The object being worked with.
  * @param string $new_colour
  *   The new colour to use.
- *
- * @return AbstractObject
- *   The newly-coloured object.
  */
 function hat_colour_change_colour(AbstractObject $object, $new_colour) {
   $object->colour = $new_colour;
