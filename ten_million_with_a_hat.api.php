@@ -34,7 +34,7 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
       // This theoretical callback is part of the .module and requires no file
       // to load.
       'callback' => 'hat_colour_change_colour',
-      'args' => array('blue');
+      'args' => array('blue'),
     ),
   );
 }
