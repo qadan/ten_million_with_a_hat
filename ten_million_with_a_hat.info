@@ -4,4 +4,4 @@ core = 7.x
 version = 7.x-dev
 dependencies[] = islandora
 dependencies[] = islandora_basic_collection
-package = Islandora Tools
+package = Ten Million with a Hat

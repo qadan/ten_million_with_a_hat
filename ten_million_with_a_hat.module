@@ -10,12 +10,10 @@
  *
  * @param int $objects
  *   How many things we wanna do stuff with.
- * @param bool $thumbnails
- *   Whether or not we want thumbnails. FALSE by default.
  * @return array
  *   The batch array thingy.
  */
-function ten_million_with_a_hat_ingest_batch($objects, $thumbnails = FALSE) {
+function ten_million_with_a_hat_ingest_batch($objects) {
   global $user;
   return array(
     'title' => t('Ten Million With A Hat Batch Ingest'),
@@ -24,7 +22,7 @@ function ten_million_with_a_hat_ingest_batch($objects, $thumbnails = FALSE) {
     'error_message' => t('An error has occured.'),
     'file' => drupal_get_path('module', 'ten_million_with_a_hat') . '/ten_million_with_a_hat.module',
     'operations' => array(
-      array('ten_million_with_a_hat_ingest_batch_operation', array($objects, $user, $thumbnails)),
+      array('ten_million_with_a_hat_ingest_batch_operation', array($objects, $user)),
     ),
   );
 }
@@ -36,18 +34,17 @@ function ten_million_with_a_hat_ingest_batch($objects, $thumbnails = FALSE) {
  *   The number of objects we're creating.
  * @param stdClass $user
  *   The logged in user.
- * @param bool $thumbnails
- *   Whether or not we are generating thumbnails.
  * @param array $context
  *   The batch context.
  */
-function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $thumbnails, &$context) {
+function ten_million_with_a_hat_ingest_batch_operation($objects, $user, &$context) {
   $sandbox = &$context['sandbox'];
   if (empty($sandbox)) {
     $context['finished'] = 0;
     $sandbox['completed'] = 0;
     $sandbox['total'] = $objects;
     $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array();
+    $sandbox['other_stuff'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
   }
   if (!empty($sandbox['collections'])) {
     $collection = islandora_object_load(ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['collections'])));
@@ -58,14 +55,19 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $thumbna
     $object->label = DrupalTestCase::randomName();
     $object->owner = $user->name;
     $object->models = (array) $model;
-    // Add the thumbnail if we're supposed to.
-    if ($thumbnails) {
-      $thumbnail = $object->constructDatastream('TN');
-      $thumbnail->setContentFromFile(drupal_get_path('module', 'islandora') . '/images/folder.png');
-      $object->ingestDatastream($thumbnail);
-    }
     $tuque->repository->ingestObject($object);
     $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection->id);
+    // If we have other things to do, do e'm.
+    foreach ($sandbox['other_stuff'] as $thing_to_do) {
+      if (isset($thing_to_do['file'])) {
+        module_load_include($thing_to_do['file']['type'], $thing_to_do['file']['module'], $thing_to_do['file']['path']);
+      }
+      $args = array($object);
+      if (isset($thing_to_do['args'])) {
+        array_unshift($args, $thing_to_do['args']);
+      }
+      call_user_func_array($thing_to_do['callback'], $args);
+    }
     $sandbox['completed']++;
     $context['message'] = "{$sandbox['completed']}/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
     $context['finished'] = $sandbox['completed'] / $sandbox['total'];
