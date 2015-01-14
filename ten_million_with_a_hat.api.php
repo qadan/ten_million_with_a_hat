@@ -15,9 +15,9 @@
  *   - 'callback': the name or class/method array for call_user_func_array()
  *   to execute. Note that the callback must accept the Fedora object currently
  *   being worked with as the first argument, and must return that same object.
- *   - 'args': an array of arguments acceptable to call_user_func_array().
- *   Added to the beginning of this will be the Fedora Object being worked
- *   with.
+ *   - 'args' (optional): an array of arguments acceptable to
+ *   call_user_func_array(). Added to the beginning of this will be the Fedora
+ *   object being worked with.
  */
 function hook_ten_million_with_a_hat_also_do_these_things() {
   return array(
@@ -28,12 +28,12 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
         'path' => 'includes/utilities',
       ),
       'callback' => 'add_second_hat_put_on_second_hat',
-      'args' => array(),
     ),
     'Change the hat colour to blue!' => array(
       // This theoretical callback is part of the .module and requires no file
       // to load.
       'callback' => 'hat_colour_change_colour',
+      // This theoretical callback also requires an extra argument.
       'args' => array('blue'),
     ),
   );
