@@ -1,0 +1,25 @@
+<?php
+
+/**
+ * @file
+ * Implements hook to log views for each new hat.
+ */
+
+function log_hat_views_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    'Log the hat view!' => array(
+      'callback' => 'log_hat_views_log_hat_view',
+    ),
+  );
+}
+
+/**
+ * Logs a view on a hat.
+ *
+ * @param AbstractObject $object
+ *   The object to log a view for.
+ */
+function log_hat_views_log_hat_view(AbstractObject $object) {
+  $tracker = new IslandoraUsageStats($object->id);
+  $tracker->logObjectView();
+}

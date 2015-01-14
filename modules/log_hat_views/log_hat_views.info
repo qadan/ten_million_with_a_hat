@@ -1,0 +1,8 @@
+name = Log Hat Views
+description = Pairs with islandora_usage_stats to log a view for each ingested object.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = islandora_usage_stats
+package = Ten Million with a Hat
+
