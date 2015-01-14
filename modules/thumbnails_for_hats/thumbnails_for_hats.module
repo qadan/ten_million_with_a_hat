@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * Module for hat thumbnails.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things()
+ */
+function thumbnails_for_hats_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    'Put the thumbnails on the hats!' => array(
+      'callback' => 'thumbnails_for_hats_put_thumbnail_on_hat',
+    ),
+  );
+}
+
+/**
+ * It puts the thumbnail on the hat or else it gets the hose again.
+ *
+ * @param AbstractObject $object
+ *   The object to put the thumbnail on.
+ */
+function thumbnails_for_hats_put_thumbnail_on_hat(AbstractObject $object) {
+  $thumbnail = $object->constructDatastream('TN', 'M');
+  $thumbnail->setContentFromFile(drupal_get_path('module', 'islandora') . "/images/folder.png");
+  $object->ingestDatastream($thumbnail);
+}
