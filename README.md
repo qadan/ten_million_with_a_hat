@@ -3,6 +3,7 @@ CONTENTS OF THIS FILE
 
  * summary
  * usage
+ * customization
 
 SUMMARY
 -------
@@ -18,3 +19,8 @@ USAGE
 - STEP 1: drush -u 1 ten-million-with-a-hat-ingest --objects=10000000
 - STEP 2: wait for like a week
 - STEP 3: actually some part of the stack will probably poop the bed before then (looking at you, fedora ಠ_ಠ).
+
+CUSTOMIZATION
+-------------
+
+A hook is available, `hook_ten_million_with_a_hat_also_do_these_things`, to modify each ingested object. Check ten_million_with_a_hat.api.php for more details.
