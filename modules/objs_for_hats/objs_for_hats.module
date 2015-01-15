@@ -1,0 +1,124 @@
+<?php
+
+/**
+ * @file
+ * OBJs for hats!
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things()
+ */
+function objs_for_hats_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    'Put the OBJs on the hats!' => array(
+      'callback' => 'objs_for_hats_put_obj_on_hat',
+    ),
+  );
+}
+
+/**
+ * Attempts to put an OBJ file on the object given.
+ *
+ * @param AbstractObject $object
+ *   The object to try to put an OBJ datastream on.
+ */
+function objs_for_hats_put_obj_on_hat(AbstractObject $object) {
+  $path = objs_for_hats_attempt_to_divine_test_obj_path($object);
+  if ($path) {
+    $obj_datastream = $object->constructDatastream('OBJ', 'M');
+    $obj_datastream->setContentFromFile($path);
+  }
+}
+
+/**
+ * Attempts to divine the path to a content model test object using witchcraft.
+ *
+ * @param AbstractObject $object
+ *   The object.
+ * @return bool|string
+ *   A string as a path, or FALSE if the arcane spells have fizzled.
+ */
+function objs_for_hats_attempt_to_divine_test_obj_path(AbstractObject $object) {
+  $models = $object->models;
+  $model = array_shift($models);
+  // Cache that business, I mean this is already gonna take a million billion
+  // years and now you're telling me we have to divine from scratch every time?
+  if ($path_cache = cache_get('objs_for_hats_paths')) {
+    if (isset($path_cache->data[$model])) {
+      return $path_cache->data[$model];
+    }
+  }
+  else {
+    cache_set('objs_for_hats_paths', array(), 'cache', CACHE_TEMPORARY);
+    $path_cache = cache_get('objs_for_hats_paths');
+  }
+  if (!$model_cache = cache_get('objs_for_hats_models')) {
+    cache_set('objs_for_hats_models', objs_for_hats_generate_solution_pack_model_array(), 'cache', CACHE_TEMPORARY);
+    $model_cache = cache_get('objs_for_hats_models');
+  }
+  module_load_include('inc', 'islandora', 'includes/mimetype.utils');
+  $extensions = islandora_get_extensions_for_datastream($object, 'OBJ');
+  $extension = array_shift($extensions);
+  $files = file_scan_directory(drupal_get_path('module', $model_cache->data[$model]), "/.*\.$extension$/");
+  if (!empty($files)) {
+    if (!isset($path_cache->data[$model])) {
+      $path_cache->data[$model] = array_shift($files);
+    }
+    return $path_cache->data[$model];
+  }
+  return FALSE;
+}
+
+/**
+ * Generates an array of content models and the modules they come from.
+ *
+ * @return array
+ *   An associative array of content models and modules they're from.
+ */
+function objs_for_hats_generate_solution_pack_model_array() {
+  $return_array = array();
+
+  module_load_include('inc', 'islandora', 'includes/solution_packs');
+  $required_objects = islandora_solution_packs_get_required_objects();
+  foreach ($required_objects as $module => $objects) {
+    foreach ($objects['objects'] as $object) {
+      if (in_array('fedora-system:ContentModel-3.0', $object->models)) {
+        $return_array[$object->id] = $module;
+      }
+    }
+  }
+
+  return $return_array;
+}
+
+/**
+ * Returns an appropriate path to a test file for the given object.
+ *
+ * @param AbstractObject $object
+ *   The object to get the path for.
+ * @param array $model_module_array
+ *   The return result from objs_for_hats_generate_solution_pack_model_array().
+ * @return string
+ *   The correct path to a test file for the given object.
+ */
+function objs_for_hats_get_path_for_model(AbstractObject $object, array $model_module_array) {
+  $models = array_diff($object->models, array('fedora-system:FedoraObject-3.0'));
+  if (!$model = array_shift($models)) {
+    return FALSE;
+  }
+  if ($model_cache = cache_get('objs_for_hats_models_' . $model)) {
+    return $model_cache->data;
+  }
+  module_load_include('inc', 'islandora', 'includes/mimetype.utils');
+  $extensions = islandora_get_extensions_for_datastream($object, 'OBJ');
+  foreach ($extensions as $extension) {
+    $files = file_scan_directory(drupal_get_path('module', $model_module_array[$model]), "/.*\.$extension$/");
+    if (!empty($files)) {
+      if (!isset($path_cache->data[$model])) {
+        $path_cache->data[$model] = array_shift($files);
+      }
+      return $path_cache->data[$model];
+    }
+  }
+  return FALSE;
+}
