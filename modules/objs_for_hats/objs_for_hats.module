@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements hook_ten_million_with_a_hat_also_do_these_things()
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
  */
 function objs_for_hats_ten_million_with_a_hat_also_do_these_things() {
   return array(
@@ -35,6 +35,7 @@ function objs_for_hats_put_obj_on_hat(AbstractObject $object) {
  *
  * @param AbstractObject $object
  *   The object.
+ *
  * @return bool|string
  *   A string as a path, or FALSE if the arcane spells have fizzled.
  */
@@ -88,6 +89,7 @@ function objs_for_hats_generate_solution_pack_model_array() {
  *   The object to get the path for.
  * @param array $model_module_array
  *   The return result from objs_for_hats_generate_solution_pack_model_array().
+ *
  * @return string
  *   The correct path to a test file for the given object.
  */

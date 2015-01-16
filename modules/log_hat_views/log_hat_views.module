@@ -5,6 +5,9 @@
  * Implements hook to log views for each new hat.
  */
 
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
 function log_hat_views_ten_million_with_a_hat_also_do_these_things() {
   return array(
     'Log the hat view!' => array(
