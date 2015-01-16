@@ -10,6 +10,7 @@
  *
  * @param int $objects
  *   How many things we wanna do stuff with.
+ *
  * @return array
  *   The batch array thingy.
  */
@@ -22,7 +23,10 @@ function ten_million_with_a_hat_ingest_batch($objects) {
     'error_message' => t('An error has occured.'),
     'file' => drupal_get_path('module', 'ten_million_with_a_hat') . '/ten_million_with_a_hat.module',
     'operations' => array(
-      array('ten_million_with_a_hat_ingest_batch_operation', array($objects, $user)),
+      array('ten_million_with_a_hat_ingest_batch_operation', array(
+        $objects,
+        $user,
+      )),
     ),
   );
 }
@@ -32,7 +36,7 @@ function ten_million_with_a_hat_ingest_batch($objects) {
  *
  * @param int $objects
  *   The number of objects we're creating.
- * @param stdClass $user
+ * @param object $user
  *   The logged in user.
  * @param array $context
  *   The batch context.
@@ -48,7 +52,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, &$contex
   }
   if (!empty($sandbox['collections'])) {
     $collection = islandora_object_load(ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['collections'])));
-    $model = ten_million_with_a_hat_get_random_array_member($sandbox['collections'][$collection->id]); 
+    $model = ten_million_with_a_hat_get_random_array_member($sandbox['collections'][$collection->id]);
     // Let's make an object wheeeee.
     $tuque = islandora_get_tuque_connection();
     $object = $tuque->repository->constructObject('islandora');
@@ -82,10 +86,11 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, &$contex
 }
 
 /**
- * Raaaaandom!
+ * Raaaaaaandom! This description ends in a full stop, so THERE, coder-review.
  *
  * @param array $array
  *   An array wheeeee.
+ *
  * @return string
  *   A random member of the string
  */
@@ -131,6 +136,7 @@ function ten_million_with_a_hat_get_collection_pid_array() {
  *
  * @param AbstractObject $collection
  *   The collection to get the policy from.
+ *
  * @return string|bool
  *   A random content model PID, or FALSE on failure.
  */

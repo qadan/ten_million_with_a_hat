@@ -29,6 +29,9 @@ function ten_million_with_a_hat_drush_command() {
   );
 }
 
+/**
+ * Imgest method for the ten-million-with-a-hat-ingest command.
+ */
 function drush_ten_million_with_a_hat_ingest() {
   batch_set(ten_million_with_a_hat_ingest_batch(drush_get_option('objects')));
   drush_backend_batch_process();
