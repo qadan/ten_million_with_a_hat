@@ -22,10 +22,12 @@ function ten_million_with_a_hat_ingest_batch($objects) {
     'progress_message' => t('Time elapsed: @elapsed <br/>Estimated time remaining @estimate.'),
     'error_message' => t('An error has occured.'),
     'file' => drupal_get_path('module', 'ten_million_with_a_hat') . '/ten_million_with_a_hat.module',
-    'operations' => array(array(
-      'ten_million_with_a_hat_ingest_batch_operation',
-      array($objects, $user),
-    )),
+    'operations' => array(
+      array(
+        'ten_million_with_a_hat_ingest_batch_operation',
+        array($objects, $user),
+      ),
+    ),
   );
 }
 
