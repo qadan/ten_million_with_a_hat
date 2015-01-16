@@ -56,17 +56,7 @@ function objs_for_hats_attempt_to_divine_test_obj_path(AbstractObject $object) {
     cache_set('objs_for_hats_models', objs_for_hats_generate_solution_pack_model_array(), 'cache', CACHE_TEMPORARY);
     $model_cache = cache_get('objs_for_hats_models');
   }
-  module_load_include('inc', 'islandora', 'includes/mimetype.utils');
-  $extensions = islandora_get_extensions_for_datastream($object, 'OBJ');
-  $extension = array_shift($extensions);
-  $files = file_scan_directory(drupal_get_path('module', $model_cache->data[$model]), "/.*\.$extension$/");
-  if (!empty($files)) {
-    if (!isset($path_cache->data[$model])) {
-      $path_cache->data[$model] = array_shift($files);
-    }
-    return $path_cache->data[$model];
-  }
-  return FALSE;
+  return objs_for_hats_get_path_for_model($object, $model_cache);
 }
 
 /**
@@ -114,10 +104,9 @@ function objs_for_hats_get_path_for_model(AbstractObject $object, array $model_m
   foreach ($extensions as $extension) {
     $files = file_scan_directory(drupal_get_path('module', $model_module_array[$model]), "/.*\.$extension$/");
     if (!empty($files)) {
-      if (!isset($path_cache->data[$model])) {
-        $path_cache->data[$model] = array_shift($files);
-      }
-      return $path_cache->data[$model];
+      $file = array_shift($files);
+      cache_set('obj_for_hats_models_' . $model, $file, 'cache', CACHE_TEMPORARY);
+      return $file;
     }
   }
   return FALSE;
