@@ -40,19 +40,6 @@ function objs_for_hats_put_obj_on_hat(AbstractObject $object) {
  *   A string as a path, or FALSE if the arcane spells have fizzled.
  */
 function objs_for_hats_attempt_to_divine_test_obj_path(AbstractObject $object) {
-  $models = $object->models;
-  $model = array_shift($models);
-  // Cache that business, I mean this is already gonna take a million billion
-  // years and now you're telling me we have to divine from scratch every time?
-  if ($path_cache = cache_get('objs_for_hats_paths')) {
-    if (isset($path_cache->data[$model])) {
-      return $path_cache->data[$model];
-    }
-  }
-  else {
-    cache_set('objs_for_hats_paths', array(), 'cache', CACHE_TEMPORARY);
-    $path_cache = cache_get('objs_for_hats_paths');
-  }
   if (!$model_cache = cache_get('objs_for_hats_models')) {
     cache_set('objs_for_hats_models', objs_for_hats_generate_solution_pack_model_array(), 'cache', CACHE_TEMPORARY);
     $model_cache = cache_get('objs_for_hats_models');
