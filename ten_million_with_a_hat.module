@@ -49,6 +49,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, &$contex
     $sandbox['total'] = $objects;
     $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array();
     $sandbox['other_stuff'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
+    uasort($sandbox['other_stuff'], 'drupal_sort_weight');
   }
   if (!empty($sandbox['collections'])) {
     $collection = islandora_object_load(ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['collections'])));

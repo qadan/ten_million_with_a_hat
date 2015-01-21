@@ -18,6 +18,8 @@
  *   - 'args' (optional): an array of arguments acceptable to
  *   call_user_func_array(). Added to the beginning of this will be the Fedora
  *   object being worked with.
+ *   - 'weight' (optional): a designated weight for the execution order of
+ *   callbacks.
  */
 function hook_ten_million_with_a_hat_also_do_these_things() {
   return array(
@@ -28,6 +30,7 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
         'path' => 'includes/utilities',
       ),
       'callback' => 'add_second_hat_put_on_second_hat',
+      'weight' => 5,
     ),
     'Change the hat colour to blue!' => array(
       // This theoretical callback is part of the .module and requires no file
@@ -35,6 +38,8 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
       'callback' => 'hat_colour_change_colour',
       // This theoretical callback also requires an extra argument.
       'args' => array('blue'),
+      // Plus, this theoretical callback should be run before the one above.
+      'weight' => 4,
     ),
   );
 }

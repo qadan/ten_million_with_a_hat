@@ -12,6 +12,7 @@ function mods_for_hats_ten_million_with_a_hat_also_do_these_things() {
   return array(
     'Give the hats some MODS metadata!' => array(
       'callback' => 'mods_for_hats_put_mods_on_hat',
+      'weight' => 5,
     ),
   );
 }

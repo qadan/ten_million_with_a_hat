@@ -1,0 +1,8 @@
+name = Update Hat DC
+description = Attempts to update the DC from existing MODS.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = mods_for_hats
+dependencies[] = xml_form_builder
+package = Ten Million with a Hat
