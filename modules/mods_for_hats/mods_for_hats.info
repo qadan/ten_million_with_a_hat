@@ -1,0 +1,6 @@
+name = MODS for Hats
+description = Attempts to add a MODS datastream to ingested objects.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+package = Ten Million with a Hat
