@@ -109,6 +109,7 @@ function ten_million_with_a_hat_get_random_array_member($array) {
  *
  * @param array $exclude
  *   An array of solution pack PIDs to exclude.
+ *
  * @return array
  *   The PID array.
  */
