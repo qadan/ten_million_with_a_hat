@@ -139,8 +139,6 @@ function ten_million_with_a_hat_get_collection_pid_array($exclude, $restrict) {
 
         // Figure out restriction.
         if (is_array($restrict)) {
-          dd($pids[$collection['pid']]);
-          dd($restrict);
           $pids[$collection['pid']] = array_values(array_intersect($pids[$collection['pid']], $restrict));
         }
         // No restriction? Figure out exclusion.
