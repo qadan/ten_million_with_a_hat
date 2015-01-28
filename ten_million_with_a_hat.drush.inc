@@ -12,8 +12,13 @@ function ten_million_with_a_hat_drush_command() {
   return array(
     'ten-million-with-a-hat-ingest' => array(
       'aliases' => array('tmhi'),
-      'description' => dt('Randomly generates n objects based on the existing collections in your repository.'),
-      'examples' => array('drush -u 1 ten-million-with-a-hat --objects=10000000 --exclude=islandora:collectionCModel,islandora:compoundCModel'),
+      'description' => dt('Randomly generates n objects based on the existing collections in your repository, with properties based on any enabled modules implementing the ten_million_with_a_hat object manipulation hook.'),
+      'examples' => array(
+        'Ingest ten million things' => 'drush -u 1 ten-million-with-a-hat-ingest --objects=10000000',
+        'Exclude both the collection and compound content models' => 'drush -u 1 tmhi --objects=100 --exclude=islandora:collectionCModel,islandora:compoundCModel',
+        'Restrict to only use the basic and large image content models' => 'drush -u 1 tmhi --objects=100 --restrict=islandora:sp_basic_image,islandora:sp_large_image_cmodel',
+        'Ingest citation objects with the "ir" namespace' => 'drush -u 1 tmhi --objects=100 --restrict=ir:citationCModel --namespace=ir',
+      ),
       'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
       'drupal dependencies' => array(
         'islandora',
