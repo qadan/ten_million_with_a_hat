@@ -25,7 +25,15 @@ function ten_million_with_a_hat_drush_command() {
           'required' => TRUE,
         ),
         'exclude' => array(
-          'description' => dt('A comma-separated list of PIDs of solution packs to exclude. Defaults to islandora:collectionCModel.'),
+          'description' => dt('A comma-separated list of PIDs of solution packs to exclude. Defaults to islandora:collectionCModel, unless "restrict" is set.'),
+          'required' => FALSE,
+        ),
+        'restrict' => array(
+          'description' => dt('A comma-separated list of PIDs of solution packs to limit ingested objects to. Overrides "exclude".'),
+          'required' => FALSE,
+        ),
+        'namespace' => array(
+          'description' => dt('A namespace to give to the ingested objects. Defaults to "islandora".'),
           'required' => FALSE,
         ),
       ),
@@ -37,10 +45,20 @@ function ten_million_with_a_hat_drush_command() {
  * Imgest method for the ten-million-with-a-hat-ingest command.
  */
 function drush_ten_million_with_a_hat_ingest() {
-  $exclude = drush_get_option('exclude', array('islandora:collectionCModel'));
-  if (!is_array($exclude)) {
-    $exclude = explode(',', $exclude);
+  // Fun times figuring out restrictions and exclusions!
+  $restrict = drush_get_option('restrict', NULL);
+  if (!is_null($restrict)) {
+    $restrict = explode(',', $restrict);
   }
-  batch_set(ten_million_with_a_hat_ingest_batch(drush_get_option('objects'), $exclude));
+  if (!is_array($restrict)) {
+    $exclude = drush_get_option('exclude', array('islandora:collectionCModel'));
+    if (!is_array($exclude)) {
+      $exclude = explode(',', $exclude);
+    }
+  }
+  else {
+    $exclude = NULL;
+  }
+  batch_set(ten_million_with_a_hat_ingest_batch(drush_get_option('objects'), $exclude, $restrict, drush_get_option('namespace', 'islandora')));
   drush_backend_batch_process();
 }
