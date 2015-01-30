@@ -85,7 +85,7 @@ XML;
 }
 
 /**
- * Randomize all the elements!
+ * Randomize all the elements! But do so with a full stop.
  *
  * @param string $text
  *   The text of the element.

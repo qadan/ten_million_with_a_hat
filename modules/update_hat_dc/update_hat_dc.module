@@ -5,6 +5,9 @@
  * Updates DC with whatever went into MODS.
  */
 
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
 function update_hat_dc_ten_million_with_a_hat_also_do_these_things() {
   $xslt = new DOMDocument();
   $xsl = file_get_contents(drupal_get_path('module', 'xml_form_builder') . '/transforms/mods_to_dc.xsl');
