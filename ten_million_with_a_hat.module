@@ -10,17 +10,19 @@
  *
  * @param int $objects
  *   How many things we wanna do stuff with.
- * @param array|null $exclude
- *   An array of solution pack PIDs to exclude, or NULL if unused.
- * @param array|null $restrict
- *   An array of solution pack PIDs to restrict the list to, or NULL if unused.
+ * @param array $cm_set
+ *   An array containing a 'type' of 'exclude' or 'restrict', as well as a
+ *   'pids' array of content model PIDs to perform the 'type' operation on.
+ * @param array $collection_set
+ *   An array containing a 'type' of 'exclude' or 'restrict', as well as a
+ *   'pids' array of collection PIDs to perform the 'type' operation on.
  * @param string $namespace
  *   The namespace to assign to ingested objects.
  *
  * @return array
  *   The batch array thingy.
  */
-function ten_million_with_a_hat_ingest_batch($objects, $exclude, $restrict, $namespace) {
+function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set, $namespace) {
   global $user;
   return array(
     'title' => t('Ten Million With A Hat Batch Ingest'),
@@ -31,7 +33,7 @@ function ten_million_with_a_hat_ingest_batch($objects, $exclude, $restrict, $nam
     'operations' => array(
       array(
         'ten_million_with_a_hat_ingest_batch_operation',
-        array($objects, $user, $exclude, $restrict, $namespace),
+        array($objects, $user, $cm_set, $collection_set, $namespace),
       ),
     ),
   );
@@ -44,22 +46,22 @@ function ten_million_with_a_hat_ingest_batch($objects, $exclude, $restrict, $nam
  *   The number of objects we're creating.
  * @param object $user
  *   The logged in user.
- * @param array|null $exclude
- *   An array of solution pack PIDs to exclude, or NULL if unused.
- * @param array|null $restrict
- *   An array of solution pack PIDS to restrict the list to, or NULL if unused.
+ * @param array $cm_set
+ *   The content model set array defined by ten_million_with_a_hat_ingest_batch.
+ * @param array $collection_set
+ *   The collection set array defined by ten_million_with_a_hat_ingest_batch.
  * @param string $namespace
  *   The namespace to assign to ingested objects.
  * @param array $context
  *   The batch context.
  */
-function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $exclude, $restrict, $namespace, &$context) {
+function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set, $collection_set, $namespace, &$context) {
   $sandbox = &$context['sandbox'];
   if (empty($sandbox)) {
     $context['finished'] = 0;
     $sandbox['completed'] = 0;
     $sandbox['total'] = $objects;
-    $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array($exclude, $restrict);
+    $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_set);
     $sandbox['other_stuff'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
     uasort($sandbox['other_stuff'], 'drupal_sort_weight');
   }
@@ -114,49 +116,62 @@ function ten_million_with_a_hat_get_random_array_member($array) {
 /**
  * Returns the list of existing collections as PIDs.
  *
- *
- * @param array|null $exclude
- *   An array of solution pack PIDs to exclude, or NULL if unused.
- * @param array|null $restrict
- *   An array of solution pack PIDs to restrict the list to, or NULL if unused.
+ * @param array $cm_set
+ *   The content model set array defined by ten_million_with_a_hat_ingest_batch.
+ * @param array $collection_set
+ *   The collection set array defined by ten_million_with_a_hat_ingest_batch.
  *
  * @return array
  *   The PID array.
  */
-function ten_million_with_a_hat_get_collection_pid_array($exclude, $restrict) {
-  $collections = islandora_basic_collection_get_collections();
+function ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_set) {
+  // Hooookay. First, let's get a collection PID array.
+  $collections = array_values(array_map(function($collection) {
+    return $collection['pid'];
+  }, islandora_basic_collection_get_collections()));
   $pids = array();
+
+  // Now, let's filter the collection list.
+  switch ($collection_set['type']) {
+    case 'restrict':
+      $collections = array_intersect($collections, $collection_set['pids']);
+      break;
+
+    case 'exclude':
+      $collections = array_diff($collections, $collection_set['pids']);
+      break;
+  }
+
+  // Alright, now to filter the content models.
   foreach ($collections as $collection) {
-    $pids[$collection['pid']] = array();
-    $loaded_collection = islandora_object_load($collection['pid']);
+    $pids[$collection] = array();
+    $loaded_collection = islandora_object_load($collection);
     if (!isset($loaded_collection['COLLECTION_POLICY'])) {
-      unset($pids[$collection['pid']]);
+      unset($pids[$collection]);
     }
     else {
-      $models = ten_million_with_a_hat_get_content_models(islandora_object_load($collection['pid']));
+      $models = ten_million_with_a_hat_get_content_models(islandora_object_load($collection));
       if ($models) {
-        $pids[$collection['pid']] = $models;
+        $pids[$collection] = $models;
 
-        // Figure out restriction.
-        if (is_array($restrict)) {
-          $pids[$collection['pid']] = array_values(array_intersect($pids[$collection['pid']], $restrict));
-        }
-        // No restriction? Figure out exclusion.
-        elseif (is_array($exclude)) {
-          $pids[$collection['pid']] = array_values(array_diff($pids[$collection['pid']], $exclude));
-        }
-        // Neither are an array? Default to including all.
-        else {
-          $pids[$collection['pid']] = array_values($pids[$collection['pid']]);
-        }
+        // Figure out restriction or exclusion of content models.
+        switch ($cm_set['type']) {
+          case 'restrict':
+            $pids[$collection] = array_values(array_intersect($pids[$collection], $cm_set['pids']));
+            break;
 
+          case 'exclude':
+            $pids[$collection] = array_values(array_diff($pids[$collection], $cm_set['pids']));
+            break;
+
+        }
         // If that process leaves the PID set empty, dump that collection.
-        if (empty($pids[$collection['pid']])) {
-          unset($pids[$collection['pid']]);
+        if (empty($pids[$collection])) {
+          unset($pids[$collection]);
         }
       }
       else {
-        unset($pids[$collection['pid']]);
+        unset($pids[$collection]);
       }
     }
   }

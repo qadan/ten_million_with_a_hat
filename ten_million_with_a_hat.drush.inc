@@ -29,14 +29,21 @@ function ten_million_with_a_hat_drush_command() {
           'description' => dt('The number of objects to create.'),
           'required' => TRUE,
         ),
-        'exclude' => array(
-          'description' => dt('A comma-separated list of PIDs of solution packs to exclude. Defaults to islandora:collectionCModel, unless "restrict" is set.'),
+        'exclude-cms' => array(
+          'description' => dt('A comma-separated list of PIDs of solution packs to exclude. Defaults to islandora:collectionCModel, unless "restrict-cms" is set.'),
           'required' => FALSE,
         ),
-        'restrict' => array(
-          'description' => dt('A comma-separated list of PIDs of solution packs to limit ingested objects to. Overrides "exclude".'),
+        'restrict-cms' => array(
+          'description' => dt('A comma-separated list of PIDs of solution packs to limit ingested objects to. Overrides "exclude-cms".'),
           'required' => FALSE,
         ),
+        'exclude-collections' => array(
+          'description' => dt('A comma-separated list of PIDs of collections to exclude. Defaults to none, though any collections containing no valid content models will automatically be excluded.'),
+          'required' => FALSE,
+        ),
+        'restrict-collections' => array(
+          'description' => dt('A comma-separated list of PIDs of collections to limit ingest to. Overrides "exclude-collections".',
+          'required' => FALSE,
         'namespace' => array(
           'description' => dt('A namespace to give to the ingested objects. Defaults to "islandora".'),
           'required' => FALSE,
@@ -50,20 +57,42 @@ function ten_million_with_a_hat_drush_command() {
  * Imgest method for the ten-million-with-a-hat-ingest command.
  */
 function drush_ten_million_with_a_hat_ingest() {
-  // Fun times figuring out restrictions and exclusions!
-  $restrict = drush_get_option('restrict', NULL);
+  $cm_set = drush_ten_million_with_a_hat_get_restriction_or_exclusion_array('cms');
+  $collection_set = drush_ten_million_with_a_hat_get_restriction_or_exclusion_array('collections');
+  batch_set(ten_million_with_a_hat_ingest_batch(drush_get_option('objects'), $cm_set, $collection_set, drush_get_option('namespace', 'islandora')));
+  drush_backend_batch_process();
+}
+
+/**
+ * Figure out restriction and exclusion for collections and content models.
+ *
+ * @param string $type
+ *   One of two types ('cms' or 'collections').
+ *
+ * @return array|null
+ *   Null if not set. Otherwise, an associative array with two keys:
+ *   'type' - a string containing the type of operation being done ('exclude'
+ *   or 'restrict')
+ *   'pids' - an array of PIDs being excluded or restricted.
+ */
+function drush_ten_million_with_a_hat_get_restriction_or_exclusion_array($type) {
+  $restrict = drush_get_option("restrict-$type", NULL);
   if (!is_null($restrict)) {
     $restrict = explode(',', $restrict);
   }
-  if (!is_array($restrict)) {
-    $exclude = drush_get_option('exclude', array('islandora:collectionCModel'));
-    if (!is_array($exclude)) {
-      $exclude = explode(',', $exclude);
-    }
+  if (is_array($restrict)) {
+    return array(
+      'type' => 'restrict',
+      'pids' => $restrict,
+    );
   }
-  else {
-    $exclude = NULL;
+
+  $exclude = drush_get_option("exclude-$type", "exclude-$type" === "exclude-cms" ? array('islandora:collectionCModel') : array());
+  if (!is_array($exclude)) {
+    $exclude = explode(',', $exclude);
   }
-  batch_set(ten_million_with_a_hat_ingest_batch(drush_get_option('objects'), $exclude, $restrict, drush_get_option('namespace', 'islandora')));
-  drush_backend_batch_process();
+  return array(
+    'type' => 'exclude',
+    'pids' => $exclude,
+  );
 }
