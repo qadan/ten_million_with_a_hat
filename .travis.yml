@@ -22,7 +22,7 @@ before_install:
   - ln -s $HOME/islandora_solution_pack_collection sites/all/modules/islandora_solution_pack_collection
   - ln -s $HOME/islandora_usage_stats sites/all/modules/islandora_usage_stats
   - drush dl date datepicker
-  - drush en --yes --user=1 ten_million_with_a_hat thumbnails_for_hats objs_for_hats log_hat_views
+  - drush en --yes --user=1 ten_million_with_a_hat thumbnails_for_hats objs_for_hats log_hat_views mods_for_hats update_hat_dc
 script:
   - ant -buildfile sites/all/modules/ten_million_with_a_hat/build.xml lint
   - $ISLANDORA_DIR/tests/scripts/line_endings.sh sites/all/modules/ten_million_with_a_hat
@@ -30,4 +30,6 @@ script:
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer objs_for_hats
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer thumbnails_for_hats
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer log_hat_views
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer mods_for_hats
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer update_hat_dc
   - phpcpd --names *.module,*.inc,*.test sites/all/modules/ten_million_with_a_hat
