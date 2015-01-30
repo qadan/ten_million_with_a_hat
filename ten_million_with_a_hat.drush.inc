@@ -42,8 +42,9 @@ function ten_million_with_a_hat_drush_command() {
           'required' => FALSE,
         ),
         'restrict-collections' => array(
-          'description' => dt('A comma-separated list of PIDs of collections to limit ingest to. Overrides "exclude-collections".',
+          'description' => dt('A comma-separated list of PIDs of collections to limit ingest to. Overrides "exclude-collections".'),
           'required' => FALSE,
+        ),
         'namespace' => array(
           'description' => dt('A namespace to give to the ingested objects. Defaults to "islandora".'),
           'required' => FALSE,
