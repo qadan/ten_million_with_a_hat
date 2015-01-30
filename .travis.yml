@@ -17,7 +17,7 @@ before_install:
   - git clone -b 7.x git://github.com/discoverygarden/islandora_usage_stats.git
   - git clone -b 7.x git://github.com/Islandora/islandora_xml_forms.git
   - git clone -b 7.x git://github.com/Islandora/php_lib.git
-  - git clone -b 7.x git://github.com/Islandora/objecttive_forms.git
+  - git clone -b 7.x git://github.com/Islandora/objective_forms.git
   - export ISLANDORA_DIR=$HOME/islandora
   - $HOME/islandora/tests/scripts/travis_setup.sh
   - cd $HOME/drupal-*
