@@ -1,0 +1,31 @@
+<?php
+
+/**
+ * @file
+ * Implements hook to log downloads for each new hat.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function log_hat_downloads_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    'Log the hat download!' => array(
+      'callback' => 'log_hat_downloads_log_hat_download',
+      'weight' => 2,
+    ),
+  );
+}
+
+/**
+ * Logs a download on a hat.
+ *
+ * @param AbstractObject $object
+ *   The object to log a download for.
+ */
+function log_hat_downloads_log_hat_download(AbstractObject $object) {
+  $tracker = new IslandoraUsageStats($object->id);
+  for ($i = 0; $i <= mt_rand(1, 100); $i++) {
+    $tracker->addTopDownload('OBJ');
+  }
+}
