@@ -12,6 +12,7 @@ function objs_for_hats_ten_million_with_a_hat_also_do_these_things() {
   return array(
     'Put the OBJs on the hats!' => array(
       'callback' => 'objs_for_hats_put_obj_on_hat',
+      'weight' => 1,
     ),
   );
 }
