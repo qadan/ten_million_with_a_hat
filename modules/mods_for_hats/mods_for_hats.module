@@ -63,11 +63,11 @@ function mods_for_hats_get_mods_for_hat() {
   <name type="personal">
     <namePart>{$spin_the_wheel['name']}</namePart>
     <role>
-      <roleTerm authority="marcrelator" type="text">{$spin_the_wheel['role']}</roleTerm>
+      <roleTerm authority="marcrelator" type="text">Author</roleTerm>
     </role>
   </name>
   <typeOfResource>{$spin_the_wheel['type_of_resource']}</typeOfResource>
-  <genre authority="lctgm">{$spin_the_wheel['genre']}</genre>
+  <genre authority="marcgt">{$spin_the_wheel['genre']}</genre>
   <originInfo>
     <dateIssued>{$spin_the_wheel['date_issued']}</dateIssued>
     <publisher>{$spin_the_wheel['publisher']}</publisher>
