@@ -18,6 +18,7 @@ before_install:
   - git clone -b 7.x git://github.com/Islandora/islandora_xml_forms.git
   - git clone -b 7.x git://github.com/Islandora/php_lib.git
   - git clone -b 7.x git://github.com/Islandora/objective_forms.git
+  - git clone -b 7.x git://github.com/Islandora/islandora_solution_pack_compound.git
   - export ISLANDORA_DIR=$HOME/islandora
   - $HOME/islandora/tests/scripts/travis_setup.sh
   - cd $HOME/drupal-*
@@ -27,8 +28,9 @@ before_install:
   - ln -s $HOME/islandora_xml_forms sites/all/modules/islandora_xml_forms
   - ln -s $HOME/php_lib sites/all/modules/php_lib
   - ln -s $HOME/objective_forms sites/all/modules/objective_forms
+  - ln -s $HOME/islandora_solution_pack_compound sites/all/modules/islandora_solution_pack_compound
   - drush dl date datepicker
-  - drush en --yes --user=1 ten_million_with_a_hat thumbnails_for_hats objs_for_hats log_hat_views mods_for_hats update_hat_dc
+  - drush en --yes --user=1 ten_million_with_a_hat thumbnails_for_hats objs_for_hats log_hat_views mods_for_hats update_hat_dc hats_in_a_compound_hat
 script:
   - ant -buildfile sites/all/modules/ten_million_with_a_hat/build.xml lint
   - $ISLANDORA_DIR/tests/scripts/line_endings.sh sites/all/modules/ten_million_with_a_hat
@@ -38,4 +40,5 @@ script:
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer log_hat_views
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer mods_for_hats
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer update_hat_dc
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer hats_in_a_compound_hat
   - phpcpd --names *.module,*.inc,*.test sites/all/modules/ten_million_with_a_hat
