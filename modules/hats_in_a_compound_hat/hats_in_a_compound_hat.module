@@ -28,4 +28,4 @@ function hats_in_a_compound_hat_ten_million_with_a_hat_also_do_these_things() {
       'args' => array($compound->id),
     ),
   );
-} 
+}
