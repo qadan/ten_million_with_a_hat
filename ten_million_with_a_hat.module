@@ -83,7 +83,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       }
       $args = array($object);
       if (isset($thing_to_do['args'])) {
-        array_unshift($args, $thing_to_do['args']);
+        $args = array_merge($args, $thing_to_do['args']);
       }
       call_user_func_array($thing_to_do['callback'], $args);
     }
