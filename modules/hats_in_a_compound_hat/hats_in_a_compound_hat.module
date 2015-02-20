@@ -6,7 +6,7 @@
  */
 
 /**
- * Implements hook_ten_million_with_a_hat_also_do_these_things()
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
  */
 function hats_in_a_compound_hat_ten_million_with_a_hat_also_do_these_things() {
   global $user;
@@ -16,7 +16,7 @@ function hats_in_a_compound_hat_ten_million_with_a_hat_also_do_these_things() {
   $compound->owner = $user->name;
   $compound->models = (array) 'islandora:compoundCModel';
   $tuque->repository->ingestObject($compound);
-  watchdog('hats_in_a_compound_hat', t("Ingesting compound objects into @id.", array('@id' => $compound->id)), WATCHDOG_INFO);
+  watchdog('hats_in_a_compound_hat', "Ingesting compound objects into @id.", array('@id' => $compound->id), WATCHDOG_INFO);
   return array(
     'Add the hat to a compound!' => array(
       'callback' => 'islandora_compound_object_add_parent',
@@ -28,4 +28,4 @@ function hats_in_a_compound_hat_ten_million_with_a_hat_also_do_these_things() {
       'args' => array($compound->id),
     ),
   );
-}  
+} 
