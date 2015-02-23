@@ -8,6 +8,11 @@
 /**
  * Allows additional callbacks to execute after each object has been ingested.
  *
+ * Note that this callback hook gets called before any object is ingested. If
+ * you need any tasks to be run before the batch process begins, or need any
+ * static variables to be generated and passed to the entire batch process,
+ * consider doing it here.
+ *
  * @return array
  *   An associative array of callback arrays to execute, containing:
  *   - 'file' (optional): an array containing 'type', 'module' and 'path', as
@@ -22,6 +27,7 @@
  *   callbacks.
  */
 function hook_ten_million_with_a_hat_also_do_these_things() {
+  $colour = hat_colour_get_colour('blue');
   return array(
     'Put on a second hat!' => array(
       'file' => array(
@@ -37,7 +43,7 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
       // to load.
       'callback' => 'hat_colour_change_colour',
       // This theoretical callback also requires an extra argument.
-      'args' => array('blue'),
+      'args' => array($colour),
       // Plus, this theoretical callback should be run before the one above.
       'weight' => 4,
     ),
@@ -54,4 +60,18 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
  */
 function hat_colour_change_colour(AbstractObject $object, $new_colour) {
   $object->colour = $new_colour;
+}
+
+/**
+ * Our theoretical hat colour getter.
+ *
+ * @param string $colour
+ *   It's a colour.
+ *
+ * @return string
+ *   A hat colour valid for use with colour-compatible objects.
+ */
+function hat_colour_get_colour($colour) {
+  // Do some rainbow magic here.
+  return $colour
 }
