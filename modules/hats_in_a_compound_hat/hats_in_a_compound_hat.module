@@ -16,7 +16,7 @@ function hats_in_a_compound_hat_ten_million_with_a_hat_also_do_these_things() {
   $compound->owner = $user->name;
   $compound->models = (array) 'islandora:compoundCModel';
   $tuque->repository->ingestObject($compound);
-  watchdog('hats_in_a_compound_hat', "Ingesting compound objects into @id.", array('@id' => $compound->id), WATCHDOG_INFO);
+  cache_set('hats_in_a_compound_hat_id', $compound->id);
   return array(
     'Add the hat to a compound!' => array(
       'callback' => 'islandora_compound_object_add_parent',
@@ -26,6 +26,24 @@ function hats_in_a_compound_hat_ten_million_with_a_hat_also_do_these_things() {
         'path' => 'includes/manage.form',
       ),
       'args' => array($compound->id),
+    ),
+  );
+}
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_say_these_things().
+ */
+function hats_in_a_compound_hat_ten_million_with_a_hat_also_say_these_things() {
+  $compound = cache_get('hats_in_a_compound_hat_id');
+  cache_clear_all('hats_in_a_compound_hat_id', 'cache');
+  return array(
+    array(
+      'type' => 'before_batch',
+      'message' => "Adding all objects to compound object $compound.",
+    ),
+    array(
+      'type' => 'after_batch',
+      'message' => "Note: all ingested objects can be found as members of the compound object $compound.",
     ),
   );
 }

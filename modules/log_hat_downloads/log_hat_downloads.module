@@ -12,7 +12,7 @@ function log_hat_downloads_ten_million_with_a_hat_also_do_these_things() {
   return array(
     'Log the hat download!' => array(
       'callback' => 'log_hat_downloads_log_hat_download',
-      'weight' => 2,
+      'weight' => 51,
     ),
   );
 }

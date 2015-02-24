@@ -12,25 +12,28 @@ function objs_for_hats_ten_million_with_a_hat_also_do_these_things() {
   return array(
     'Put the OBJs on the hats!' => array(
       'callback' => 'objs_for_hats_put_obj_on_hat',
-      'weight' => 1,
+      // We should try to do this long after any other OBJs may be created.
+      'weight' => 50,
     ),
   );
 }
 
 /**
- * Attempts to put an OBJ file on the object given.
+ * Attempts to put an OBJ file on the object given if none exist.
  *
  * @param AbstractObject $object
  *   The object to try to put an OBJ datastream on.
  */
 function objs_for_hats_put_obj_on_hat(AbstractObject $object) {
-  $file = objs_for_hats_attempt_to_divine_test_obj_path($object);
-  if ($file) {
-    $obj_datastream = $object->constructDatastream('OBJ', 'M');
-    $obj_datastream->setContentFromFile($file['uri']);
-    $obj_datastream->mimetype = $file['mimetype'];
-    $obj_datastream->label = $file['filename'];
-    $object->ingestDatastream($obj_datastream);
+  if (!$object['OBJ']) {
+    $file = objs_for_hats_attempt_to_divine_test_obj_path($object);
+    if ($file) {
+      $obj_datastream = $object->constructDatastream('OBJ', 'M');
+      $obj_datastream->setContentFromFile($file['uri']);
+      $obj_datastream->mimetype = $file['mimetype'];
+      $obj_datastream->label = $file['filename'];
+      $object->ingestDatastream($obj_datastream);
+    }
   }
 }
 

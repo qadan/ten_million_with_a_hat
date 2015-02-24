@@ -55,7 +55,10 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
  *
  * Each key returned by this callback must be set to an associative array
  * containing the following keys:
- * - 'callback': a string containing the name of the callback being referenced
+ * - 'message': a message to display. Overrides 'callback'.
+ * - 'callback': a string containing the name of a callback to run to get the
+ *   message. Callbacks should return a string representing a message to
+ *   display, or return NULL to skip displaying a message.
  * - 'type': a string containing the type of message being generated, either
  *   'before_batch' to display it before the entire batch process,
  *   'between_ingests' to display it once after each object is ingested, and 
@@ -84,13 +87,13 @@ function hook_ten_million_with_a_hat_also_say_these_things() {
     ),
     array(
       'type' => 'after_batch',
-      'callback' => 'hat_colour_after_batch_message_callback',
+      'message' => "All done!",
     ),
   );
 }
 
 /**
- * Just an example of what the callbacks should look like.
+ * Just an example of what the object manipulation callbacks should look like.
  *
  * @param AbstractObject $object
  *   The object being worked with.
@@ -113,4 +116,24 @@ function hat_colour_change_colour(AbstractObject $object, $new_colour) {
 function hat_colour_get_colour($colour) {
   // Do some rainbow magic here.
   return $colour;
+}
+
+/**
+ * Just an example of what the messaging callbacks should look like.
+ *
+ * @param AbstractObject $object
+ *   The object being worked with, since this is a between_ingests callback.
+ * @param string $param_2
+ *   A theoretical second parameter.
+ * @param string $param_3
+ *   A theoretical third parameter.
+ *
+ * @return string|null
+ *   A string containing the message, or NULL if we should return no message.
+ */
+function hat_colour_between_ingests_message_callback(AbstractObject $object, $param_2, $param_3) {
+  if ($object->id === "some:exception") {
+    return NULL;
+  }
+  return "The object was {$object->id}, and the parameters were $param_2 and $param_3";
 }

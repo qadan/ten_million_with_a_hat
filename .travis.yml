@@ -19,6 +19,8 @@ before_install:
   - git clone -b 7.x git://github.com/Islandora/php_lib.git
   - git clone -b 7.x git://github.com/Islandora/objective_forms.git
   - git clone -b 7.x git://github.com/Islandora/islandora_solution_pack_compound.git
+  - git clone -b 7.x git://github.com/Islandora/islandora_solution_pack_book.git
+  - git clone -b 7.x git://github.com/Islandora/islandora_paged_content.git
   - export ISLANDORA_DIR=$HOME/islandora
   - $HOME/islandora/tests/scripts/travis_setup.sh
   - cd $HOME/drupal-*
@@ -29,8 +31,11 @@ before_install:
   - ln -s $HOME/php_lib sites/all/modules/php_lib
   - ln -s $HOME/objective_forms sites/all/modules/objective_forms
   - ln -s $HOME/islandora_solution_pack_compound sites/all/modules/islandora_solution_pack_compound
+  - ln -s $HOME/islandora_solution_pack_book sites/all/modules/islandora_solution_pack_book
+  - ln -s $HOME/islandora_paged_content sites/all/modules/islandora_paged_content
+  - sudo apt-get -y install fortune
   - drush dl date datepicker
-  - drush en --yes --user=1 ten_million_with_a_hat thumbnails_for_hats objs_for_hats log_hat_views mods_for_hats update_hat_dc hats_in_a_compound_hat
+  - drush en --yes --user=1 ten_million_with_a_hat thumbnails_for_hats objs_for_hats log_hat_views mods_for_hats update_hat_dc hats_in_a_compound_hat hats_in_a_book tiffs_for_page_hats
 script:
   - ant -buildfile sites/all/modules/ten_million_with_a_hat/build.xml lint
   - $ISLANDORA_DIR/tests/scripts/line_endings.sh sites/all/modules/ten_million_with_a_hat
@@ -41,4 +46,6 @@ script:
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer mods_for_hats
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer update_hat_dc
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer hats_in_a_compound_hat
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer hats_in_a_book
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer tiffs_for_page_hats
   - phpcpd --names *.module,*.inc,*.test sites/all/modules/ten_million_with_a_hat

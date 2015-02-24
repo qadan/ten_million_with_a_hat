@@ -67,8 +67,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     uasort($sandbox['other_stuff'], 'drupal_sort_weight');
     uasort($sandbox['messages'], 'drupal_sort_weight');
     foreach ($sandbox['messages'] as $message) {
-      if ($message['type'] === 'before_batch') {
-        $context['message'] = ten_million_with_a_hat_parse_message_callback($message['callback']);
+      if ($message['type'] === 'before_batch' && !$parsed_message = ten_million_with_a_hat_parse_message($message['callback'])) {
+        $context['message'] = $parsed_message;
       }
     }
   }
@@ -96,8 +96,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     }
     // Say stuff after we do stuff.
     foreach ($sandbox['messages'] as $message) {
-      if ($message['type'] === 'between_ingests') {
-        $context['message'] = ten_million_with_a_hat_parse_message_callback($message['callback'], $object);
+      if ($message['type'] === 'between_ingests' && !$parsed_message = ten_million_with_a_hat_parse_message($message['callback'], $object)) {
+        $context['message'] = $parsed_message;
       }
     }
     $sandbox['completed']++;
@@ -105,8 +105,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $context['finished'] = $sandbox['completed'] / $sandbox['total'];
     if ($context['finished']) {
       foreach ($sandbox['messages'] as $message) {
-        if ($message['type'] === 'after_batch') {
-          $context['message'] = ten_million_with_a_hat_parse_message_callback($message['callback']);
+        if ($message['type'] === 'after_batch' && !$parsed_message = ten_million_with_a_hat_parse_message($message['callback'])) {
+          $context['message'] = $parsed_message;
         }
       }
     }
@@ -225,7 +225,7 @@ function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
  * @param array $callback
  *   The callback array returned by the also_say_these_things hook, containing
  *   at least a 'callback' string and a 'type' string, and possibly an 'args'
- *   array.
+ *   array. If a 'message' string is found, it just returns that.
  * @param AbstractObject|null $object
  *   The object currently being worked with. If it's needed, pass it in, and it
  *   will be set as the first parameter when the callback is run; otherwise,
@@ -234,7 +234,11 @@ function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
  * @return string
  *   The parsed message to display.
  */
-function ten_million_with_a_hat_parse_message_callback($callback, $object = NULL) {
+function ten_million_with_a_hat_parse_message($callback, $object = NULL) {
+  if (isset($callback['message'])) {
+    return $callback['message'];
+  }
+
   $args = array();
   if (is_object($object) && is_subclass_of($object, 'AbstractObject')) {
     $args[] = $object;
