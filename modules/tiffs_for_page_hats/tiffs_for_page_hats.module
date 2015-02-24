@@ -9,7 +9,11 @@
  * Implements hook_ten_million_with_a_hat_also_do_these_things().
  */
 function tiffs_for_page_hats_ten_million_with_a_hat_also_do_these_things() {
-  if (is_executable('fortune')) {
+  $fortune_path = exec('which fortune');
+  $convert_path = exec('which convert');
+  if (is_executable($fortune_path) && is_executable($convert_path)) {
+    cache_set('tiffs_for_page_hats_fortune_path', $fortune_path);
+    cache_set('tiffs_for_page_hats_convert_path', $convert_path);
     return array(
       'Tiffs for page hats!' => array(
         'callback' => 'tiffs_for_page_hats_add_tiff_to_page',
@@ -25,21 +29,25 @@ function tiffs_for_page_hats_ten_million_with_a_hat_also_do_these_things() {
  */
 function tiffs_for_page_hats_ten_million_with_a_hat_also_say_these_things() {
   $return = array();
-  if (!is_executable('fortune')) {
+  $fortune = cache_get('tiffs_for_page_hats_fortune_path');
+  $convert = cache_get('tiffs_for_page_hats_convert_path');
+  if (!is_executable($fortune->data)) {
     $return[] = array(
       'type' => 'before_batch',
       'message' => "The 'fortune' application is not executable; tiff OBJs will not be generated for pages.",
     );
   }
-  if (!is_executable('convert')) {
+  if (!is_executable($convert->data)) {
     $return[] = array(
       'type' => 'before_batch',
       'message' => "The 'convert' application is not executable; tiff OBJs will not be generated for pages.",
     );
   }
-  if (!empty($return)) {
-    return $return;
-  }
+  $return[] = array(
+    'type' => 'after_batch',
+    'callback' => 'tiffs_for_page_hats_clean_cache',
+  );
+  return $return;
 }
 
 /**
@@ -71,9 +79,23 @@ function tiffs_for_page_hats_add_tiff_to_page(AbstractObject $object) {
  *   TRUE on success or FALSE on failure.
  */
 function tiffs_for_page_hats_make_a_tiff() {
-  if (is_executable('fortune') && is_executable('convert')) {
+  $fortune = cache_get('tiffs_for_page_hats_fortune_path');
+  $convert = cache_get('tiffs_for_page_hats_convert_path');
+  if (is_executable($fortune->data) && is_executable($convert->data)) {
     $tmp = file_directory_temp();
-    exec("fortune | convert -colorspace Gray -depth 8 -background white -fill black -pointsize 72 -size 800x600 caption:@- -compress lzw -flatten +matte page\ $tmp/page.tiff");
+    exec("fortune | convert -colorspace Gray -depth 8 -background white -fill black -pointsize 72 -size 800x600 caption:@- -compress lzw -flatten +matte $tmp/page.tiff");
     return file_exists("$tmp/page.tiff");
   }
+}
+
+/**
+ * Cleans up the cache.
+ *
+ * @return null
+ *   Nothing to report here.
+ */
+function tiffs_for_page_hats_clean_cache() {
+  cache_clear_all('tiffs_for_page_hats_fortune_path', 'cache');
+  cache_clear_all('tiffs_for_page_hats_convert_path', 'cache');
+  return NULL;
 }

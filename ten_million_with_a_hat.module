@@ -67,8 +67,11 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     uasort($sandbox['other_stuff'], 'drupal_sort_weight');
     uasort($sandbox['messages'], 'drupal_sort_weight');
     foreach ($sandbox['messages'] as $message) {
-      if ($message['type'] === 'before_batch' && !$parsed_message = ten_million_with_a_hat_parse_message($message['callback'])) {
-        $context['message'] = $parsed_message;
+      if ($message['type'] === 'before_batch') {
+        $parsed_message = ten_million_with_a_hat_parse_message($message);
+        if (!is_null($parsed_message)) {
+          $context['message'] = $parsed_message;
+        }
       }
     }
   }
@@ -94,19 +97,29 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       }
       call_user_func_array($thing_to_do['callback'], $args);
     }
-    // Say stuff after we do stuff.
+    $sandbox['completed']++;
+
+    // First, print out the ingest message.
+    $context['message'] = "{$sandbox['completed']}/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
+    // Then, say anything else we need to.
     foreach ($sandbox['messages'] as $message) {
-      if ($message['type'] === 'between_ingests' && !$parsed_message = ten_million_with_a_hat_parse_message($message['callback'], $object)) {
-        $context['message'] = $parsed_message;
+      if ($message['type'] === 'between_ingests') {
+        $parsed_message = ten_million_with_a_hat_parse_message($message, $object);
+        if (!is_null($parsed_message)) {
+          $context['message'] = $parsed_message;
+        }
       }
     }
-    $sandbox['completed']++;
-    $context['message'] = "{$sandbox['completed']}/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
+
+    // See if we're finished, and if we are, print all the finished messages.
     $context['finished'] = $sandbox['completed'] / $sandbox['total'];
-    if ($context['finished']) {
+    if ($context['finished'] === 1) {
       foreach ($sandbox['messages'] as $message) {
-        if ($message['type'] === 'after_batch' && !$parsed_message = ten_million_with_a_hat_parse_message($message['callback'])) {
-          $context['message'] = $parsed_message;
+        if ($message['type'] === 'after_batch') {
+          $parsed_message = ten_million_with_a_hat_parse_message($message);
+          if (!is_null($parsed_message)) {
+            $context['message'] = $parsed_message;
+          }
         }
       }
     }
@@ -231,12 +244,15 @@ function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
  *   will be set as the first parameter when the callback is run; otherwise,
  *   just leave it as NULL.
  *
- * @return string
- *   The parsed message to display.
+ * @return string|null
+ *   The parsed message to display, or NULL if nothing can be displayed.
  */
 function ten_million_with_a_hat_parse_message($callback, $object = NULL) {
   if (isset($callback['message'])) {
     return $callback['message'];
+  }
+  if (!isset($callback['callback'])) {
+    return NULL;
   }
 
   $args = array();

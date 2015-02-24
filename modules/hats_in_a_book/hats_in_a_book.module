@@ -32,6 +32,7 @@ function hats_in_a_book_ten_million_with_a_hat_also_do_these_things() {
  */
 function hats_in_a_book_ten_million_with_a_hat_also_say_these_things() {
   $book = cache_get('hats_in_a_book_id');
+  $book = $book->data;
   return array(
     array(
       'type' => 'before_batch',
@@ -63,6 +64,7 @@ function hats_in_a_book_add_to_book(AbstractObject $object, $book) {
     // Add the page to the book.
     module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
     $current_page = cache_get('hats_in_a_book_current_page');
+    $current_page = $current_page->data;
     islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isPageOf', $book);
     islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isSequenceNumber', $current_page);
     islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isPageNumber', $current_page);
@@ -88,7 +90,8 @@ function hats_in_a_book_add_to_book(AbstractObject $object, $book) {
 function hats_in_a_book_between_ingests_message_callback(AbstractObject $object, $book) {
   if (in_array('islandora:pageCModel', $object->models)) {
     // The page counter will have been incremented already, so subtract 1.
-    $page = cache_get('hats_in_a_book_current_page') - 1;
+    $page = cache_get('hats_in_a_book_current_page');
+    $page = $page->data - 1;
     return "Set $object->id as page $page of book object $book.";
   }
   return NULL;
