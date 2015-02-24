@@ -240,7 +240,7 @@ function ten_million_with_a_hat_parse_message_callback($callback, $object = NULL
     $args[] = $object;
   }
   if (isset($callback['args'])) {
-    $args = array_merge($args, $callback['args');
+    $args = array_merge($args, $callback['args']);
   }
   return call_user_func_array($callback['callback'], $args);
 }
