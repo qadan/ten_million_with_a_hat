@@ -17,36 +17,21 @@ function hats_in_a_book_ten_million_with_a_hat_also_do_these_things() {
   $book->models = (array) 'islandora:bookCModel';
   $book->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:bookCollection');
   $tuque->repository->ingestObject($book);
-  cache_set('hats_in_a_book_id', $book->id);
   cache_set('hats_in_a_book_current_page', 1);
   return array(
-    'Put the page hats in a book!' => array(
+    array(
+      'when' => 'before_batch',
+      'message' => "Ingesting all pages into the book object {$book->id}.",
+    ),
+    array(
       'callback' => 'hats_in_a_book_add_to_book',
       'args' => array($book->id),
-    ),
-  );
-}
-
-/**
- * Implements hook_ten_million_with_a_hat_also_say_these_things().
- */
-function hats_in_a_book_ten_million_with_a_hat_also_say_these_things() {
-  $book = cache_get('hats_in_a_book_id');
-  $book = $book->data;
-  return array(
-    array(
-      'type' => 'before_batch',
-      'message' => "Ingesting all pages into the book object $book.",
+      'when' => 'between_ingests',
     ),
     array(
-      'type' => 'between_ingests',
-      'callback' => 'hats_in_a_book_between_ingests_message_callback',
-      'args' => array($book),
-    ),
-    array(
-      'type' => 'after_batch',
-      'callback' => 'hats_in_a_book_after_batch_message_callback',
-      'args' => array($book),
+      'when' => 'after_batch',
+      'callback' => 'hats_in_a_book_after_batch_callback',
+      'args' => array($book->id),
     ),
   );
 }
@@ -70,31 +55,11 @@ function hats_in_a_book_add_to_book(AbstractObject $object, $book) {
     islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isPageNumber', $current_page);
     islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isSection', 1);
     islandora_paged_content_set_relationship($object->relationships, FEDORA_RELS_EXT_URI, 'isMemberOf', $book);
+    $message = "Set {$object->id} as page $page of book object $book.";
     $current_page++;
     cache_set('hats_in_a_book_current_page', $current_page);
+    return $message;
   }
-}
-
-/**
- * Between ingests callback for ingested pages.
- *
- * @param AbstractObject $object
- *   The page object that was ingested into the book, potentially.
- * @param string $book
- *   The PID of the book we potentially ingested the page into.
- *
- * @return string|null
- *   A message describing the page relationship between the book and page, or
- *   NULL if $object isn't a page.
- */
-function hats_in_a_book_between_ingests_message_callback(AbstractObject $object, $book) {
-  if (in_array('islandora:pageCModel', $object->models)) {
-    // The page counter will have been incremented already, so subtract 1.
-    $page = cache_get('hats_in_a_book_current_page');
-    $page = $page->data - 1;
-    return "Set $object->id as page $page of book object $book.";
-  }
-  return NULL;
 }
 
 /**
@@ -106,8 +71,7 @@ function hats_in_a_book_between_ingests_message_callback(AbstractObject $object,
  * @return string
  *   A message re-reporting the PID of the book.
  */
-function hats_in_a_book_after_batch_message_callback($book) {
-  cache_clear_all('hats_in_a_book_id', 'cache');
+function hats_in_a_book_after_batch_callback($book) {
   cache_clear_all('hats_in_a_book_current_page', 'cache');
   return "All page objects have been ingested into the book object $book.";
 }

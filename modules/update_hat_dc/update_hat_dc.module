@@ -13,7 +13,7 @@ function update_hat_dc_ten_million_with_a_hat_also_do_these_things() {
   $xsl = file_get_contents(drupal_get_path('module', 'xml_form_builder') . '/transforms/mods_to_dc.xsl');
   $xslt->loadXML($xsl);
   return array(
-    'Generate DC from the hat MODS!' => array(
+    array(
       'callback' => 'update_hat_dc_do_what_the_module_name_says',
       'args' => array($xslt),
       'weight' => 6,

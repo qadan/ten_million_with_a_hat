@@ -63,12 +63,17 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $sandbox['total'] = $objects;
     $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_set);
     $sandbox['other_stuff'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
-    $sandbox['messages'] = module_invoke_all('ten_million_with_a_hat_also_say_these_things');
     uasort($sandbox['other_stuff'], 'drupal_sort_weight');
-    uasort($sandbox['messages'], 'drupal_sort_weight');
-    foreach ($sandbox['messages'] as $message) {
-      if ($message['type'] === 'before_batch') {
-        $parsed_message = ten_million_with_a_hat_parse_message($message);
+    // Let 'when' equal the default if it's not set.
+    foreach ($sandbox['other_stuff'] as &$thing) {
+      if (!isset($thing['when']) {
+        $thing['when'] = 'between_ingests';
+      }
+    }
+    // Run before_batch callbacks and messages.
+    foreach ($sandbox['other_stuff'] as $thing) {
+      if ($thing['when'] === 'before_batch') {
+        $parsed_message = ten_million_with_a_hat_do_callback($thing);
         if (!is_null($parsed_message)) {
           $context['message'] = $parsed_message;
         }
@@ -86,37 +91,27 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $object->models = (array) $model;
     $tuque->repository->ingestObject($object);
     $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection->id);
-    // If we have other things to do, do e'm.
-    foreach ($sandbox['other_stuff'] as $thing_to_do) {
-      if (isset($thing_to_do['file'])) {
-        module_load_include($thing_to_do['file']['type'], $thing_to_do['file']['module'], $thing_to_do['file']['path']);
-      }
-      $args = array($object);
-      if (isset($thing_to_do['args'])) {
-        $args = array_merge($args, $thing_to_do['args']);
-      }
-      call_user_func_array($thing_to_do['callback'], $args);
-    }
-    $sandbox['completed']++;
 
     // First, print out the ingest message.
     $context['message'] = "{$sandbox['completed']}/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
-    // Then, say anything else we need to.
-    foreach ($sandbox['messages'] as $message) {
-      if ($message['type'] === 'between_ingests') {
-        $parsed_message = ten_million_with_a_hat_parse_message($message, $object);
+    // Then, do the between_ingest callbacks and print out results.
+    foreach ($sandbox['other_stuff'] as $thing) {
+      if ($thing['when'] !== 'between_ingests') {
+        $parsed_message = ten_million_with_a_hat_do_thing($thing, $object);
         if (!is_null($parsed_message)) {
           $context['message'] = $parsed_message;
         }
       }
     }
 
+    // Update the completed counter and see if we gotta do stuff.
+    $sandbox['completed']++;
     // See if we're finished, and if we are, print all the finished messages.
     $context['finished'] = $sandbox['completed'] / $sandbox['total'];
     if ($context['finished'] === 1) {
-      foreach ($sandbox['messages'] as $message) {
-        if ($message['type'] === 'after_batch') {
-          $parsed_message = ten_million_with_a_hat_parse_message($message);
+      foreach ($sandbox['other_stuff'] as $thing) {
+        if ($thing['when'] === 'after_batch') {
+          $parsed_message = ten_million_with_a_hat_do_thing($thing);
           if (!is_null($parsed_message)) {
             $context['message'] = $parsed_message;
           }
@@ -233,28 +228,25 @@ function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
 }
 
 /**
- * Takes a message callback and arguments and turns it into a message.
+ * Does a thing and maybe returns a message.
  *
  * @param array $callback
- *   The callback array returned by the also_say_these_things hook, containing
- *   at least a 'callback' string and a 'type' string, and possibly an 'args'
- *   array. If a 'message' string is found, it just returns that.
+ *   The callback array returned by the also_do_these_things hook.
  * @param AbstractObject|null $object
  *   The object currently being worked with. If it's needed, pass it in, and it
  *   will be set as the first parameter when the callback is run; otherwise,
  *   just leave it as NULL.
  *
  * @return string|null
- *   The parsed message to display, or NULL if nothing can be displayed.
+ *   The parsed message to display, or NULL if nothing will be displayed.
  */
-function ten_million_with_a_hat_parse_message($callback, $object = NULL) {
-  if (isset($callback['message'])) {
-    return $callback['message'];
-  }
-  if (!isset($callback['callback'])) {
-    return NULL;
+function ten_million_with_a_hat_do_thing($callback, $object = NULL) {
+  // Load an include if we must.
+  if (isset($callback['file'])) {
+    module_load_include($callback['file']['type'], $callback['file']['module'], $callback['file']['path']);
   }
 
+  // Set up the args array. If $object was passed in, add it.
   $args = array();
   if (is_object($object) && is_subclass_of($object, 'AbstractObject')) {
     $args[] = $object;
@@ -262,5 +254,17 @@ function ten_million_with_a_hat_parse_message($callback, $object = NULL) {
   if (isset($callback['args'])) {
     $args = array_merge($args, $callback['args']);
   }
-  return call_user_func_array($callback['callback'], $args);
+
+  // Do the thing if there is one, and get the response.
+  $callback_response = NULL;
+  if (isset($callback['callback'])) {
+    $callback_response = call_user_func_array($callback['callback'], $args);
+  }
+
+  // If there's a message, that gets priority as the response. Otherwise, give
+  // back whatever came from the callback, even if it's NULL.
+  if (isset($callback['message'])) {
+    return $callback['message'];
+  }
+  return $callback_response;
 }
