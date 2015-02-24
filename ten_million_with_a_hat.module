@@ -63,7 +63,14 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $sandbox['total'] = $objects;
     $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_set);
     $sandbox['other_stuff'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
+    $sandbox['messages'] = module_invoke_all('ten_million_with_a_hat_also_say_these_things');
     uasort($sandbox['other_stuff'], 'drupal_sort_weight');
+    uasort($sandbox['messages'], 'drupal_sort_weight');
+    foreach ($sandbox['messages'] as $message) {
+      if ($message['type'] === 'before_batch') {
+        $context['message'] = ten_million_with_a_hat_parse_message_callback($message['callback']);
+      }
+    }
   }
   if (!empty($sandbox['collections'])) {
     $collection = islandora_object_load(ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['collections'])));
@@ -87,9 +94,22 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       }
       call_user_func_array($thing_to_do['callback'], $args);
     }
+    // Say stuff after we do stuff.
+    foreach ($sandbox['messages'] as $message) {
+      if ($message['type'] === 'between_ingests') {
+        $context['message'] = ten_million_with_a_hat_parse_message_callback($message['callback'], $object);
+      }
+    }
     $sandbox['completed']++;
     $context['message'] = "{$sandbox['completed']}/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
     $context['finished'] = $sandbox['completed'] / $sandbox['total'];
+    if ($context['finished']) {
+      foreach ($sandbox['messages'] as $message) {
+        if ($message['type'] === 'after_batch') {
+          $context['message'] = ten_million_with_a_hat_parse_message_callback($message['callback']);
+        }
+      }
+    }
   }
 
   // Handle the case where your repository is so messed up that there are no
@@ -197,4 +217,30 @@ function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
     return FALSE;
   }
   return array_keys($policy->getContentModels());
+}
+
+/**
+ * Takes a message callback and arguments and turns it into a message.
+ *
+ * @param array $callback
+ *   The callback array returned by the also_say_these_things hook, containing
+ *   at least a 'callback' string and a 'type' string, and possibly an 'args'
+ *   array.
+ * @param AbstractObject|null $object
+ *   The object currently being worked with. If it's needed, pass it in, and it
+ *   will be set as the first parameter when the callback is run; otherwise,
+ *   just leave it as NULL.
+ *
+ * @return $message
+ *   The parsed message to display.
+ */
+function ten_million_with_a_hat_parse_message_callback($callback, $object = NULL) {
+  $args = array();
+  if (is_object($object) && is_subclass_of($object, 'AbstractObject')) {
+    $args[] = $object;
+  }
+  if (isset($callback['args'])) {
+    $args = array_merge($args, $callback['args');
+  }
+  return call_user_func_array($callback['callback'], $args);
 }
