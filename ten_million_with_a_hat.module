@@ -231,7 +231,7 @@ function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
  *   will be set as the first parameter when the callback is run; otherwise,
  *   just leave it as NULL.
  *
- * @return $message
+ * @return string
  *   The parsed message to display.
  */
 function ten_million_with_a_hat_parse_message_callback($callback, $object = NULL) {
