@@ -66,7 +66,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     uasort($sandbox['other_stuff'], 'drupal_sort_weight');
     // Let 'when' equal the default if it's not set.
     foreach ($sandbox['other_stuff'] as &$thing) {
-      if (!isset($thing['when']) {
+      if (!isset($thing['when'])) {
         $thing['when'] = 'between_ingests';
       }
     }
