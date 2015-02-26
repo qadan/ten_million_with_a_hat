@@ -20,10 +20,6 @@ function hats_in_a_book_ten_million_with_a_hat_also_do_these_things() {
   cache_set('hats_in_a_book_current_page', 1);
   return array(
     array(
-      'when' => 'before_batch',
-      'message' => "Ingesting all pages into the book object {$book->id}.",
-    ),
-    array(
       'callback' => 'hats_in_a_book_add_to_book',
       'args' => array($book->id),
       'when' => 'between_ingests',

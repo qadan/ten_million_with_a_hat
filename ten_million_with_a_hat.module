@@ -87,7 +87,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection->id);
 
     // First, print out the ingest message.
-    $context['message'] = "{$sandbox['completed']}/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
+    $completed = $sandbox['completed'] + 1;
+    $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
     // Then, do the between_ingest callbacks and print out results.
     foreach ($sandbox['other_stuff'] as $thing) {
       if ($thing['when'] === 'between_ingests') {
