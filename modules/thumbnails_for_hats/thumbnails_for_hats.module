@@ -12,6 +12,7 @@ function thumbnails_for_hats_ten_million_with_a_hat_also_do_these_things() {
   return array(
     array(
       'callback' => 'thumbnails_for_hats_put_thumbnail_on_hat',
+      'when' => 'between_ingests',
     ),
   );
 }

@@ -17,6 +17,7 @@ function update_hat_dc_ten_million_with_a_hat_also_do_these_things() {
       'callback' => 'update_hat_dc_do_what_the_module_name_says',
       'args' => array($xslt),
       'weight' => 6,
+      'when' => 'between_ingests',
     ),
   );
 }

@@ -17,6 +17,7 @@ function tiffs_for_page_hats_ten_million_with_a_hat_also_do_these_things() {
         'callback' => 'tiffs_for_page_hats_add_tiff_to_page',
         // Try to do this before objs_for_hats.
         'weight' => 49,
+        'when' => 'between_ingests',
       ),
     );
   }

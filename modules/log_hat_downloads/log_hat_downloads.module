@@ -13,6 +13,7 @@ function log_hat_downloads_ten_million_with_a_hat_also_do_these_things() {
     array(
       'callback' => 'log_hat_downloads_log_hat_download',
       'weight' => 51,
+      'when' => 'between_ingests',
     ),
   );
 }

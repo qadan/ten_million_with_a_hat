@@ -12,6 +12,7 @@ function log_hat_views_ten_million_with_a_hat_also_do_these_things() {
   return array(
     array(
       'callback' => 'log_hat_views_log_hat_view',
+      'when' => 'between_ingests',
     ),
   );
 }

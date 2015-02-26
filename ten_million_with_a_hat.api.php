@@ -9,13 +9,16 @@
  * Allows additional callbacks to execute during the batch process.
  *
  * Also allows for the return of messages from these callbacks. As all keys in
- * the hook array are optional, one can skip the callback array and simply pass
- * back a 'message' for display purposes during the batch. It would not be much
- * use to implement this hook without a 'callback' or 'message' in the array,
- * though, so probably don't do that.
+ * the hook array except for 'when' are optional, one can skip the callback
+ * array and simply pass back a 'message' for display purposes during the
+ * batch. It would not be much use to implement this hook without a 'callback'
+ * or 'message' in the array, though, so probably don't do that.
  *
  * @return array
  *   An associative array of callback arrays to execute, containing:
+ *   - 'when' (mandatory): one of three possible values - 'before_batch',
+ *     'between_ingests', or 'after_batch', to designate when this should be
+ *     run.
  *   - 'file': an array containing 'type', 'module' and 'path', as
  *     one would pass these parameters to module_load_include().
  *   - 'callback': the name or class/method array for call_user_func_array()
@@ -31,9 +34,6 @@
  *     callbacks.
  *   - 'message': A message to show after the callback is executed.
  *     Overrides any return value from the callback.
- *   - 'when': one of three possible values - 'before_batch',
- *     'between_ingests', or 'after_batch', to designate when this should be
- *     run. Defaults to 'between_ingests'.
  */
 function hook_ten_million_with_a_hat_also_do_these_things() {
   $colour = hat_colour_get_colour('blue');
