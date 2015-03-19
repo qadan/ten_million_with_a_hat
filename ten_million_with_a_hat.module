@@ -63,14 +63,18 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $sandbox['total'] = $objects;
     $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_set);
     $sandbox['other_stuff'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
+    // Sort and categorize the other stuff.
     uasort($sandbox['other_stuff'], 'drupal_sort_weight');
-    // Run before_batch callbacks and messages.
+    $sorted = array();
     foreach ($sandbox['other_stuff'] as $thing) {
-      if ($thing['when'] === 'before_batch') {
-        $parsed_message = ten_million_with_a_hat_do_thing($thing);
-        if (!is_null($parsed_message)) {
-          $context['message'] = $parsed_message;
-        }
+      $sorted[$thing['when']][] = $thing;
+    }
+    $sandbox['other_stuff'] = $sorted;
+    // Run before_batch callbacks and messages.
+    foreach ($sandbox['other_stuff']['before_batch'] as $thing) {
+      $parsed_message = ten_million_with_a_hat_do_thing($thing);
+      if (!is_null($parsed_message)) {
+        $context['message'] = $parsed_message;
       }
     }
   }
@@ -90,12 +94,10 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $completed = $sandbox['completed'] + 1;
     $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
     // Then, do the between_ingest callbacks and print out results.
-    foreach ($sandbox['other_stuff'] as $thing) {
-      if ($thing['when'] === 'between_ingests') {
-        $parsed_message = ten_million_with_a_hat_do_thing($thing, $object);
-        if (!is_null($parsed_message)) {
-          $context['message'] = $parsed_message;
-        }
+    foreach ($sandbox['other_stuff']['between_ingests'] as $thing) {
+      $parsed_message = ten_million_with_a_hat_do_thing($thing, $object);
+      if (!is_null($parsed_message)) {
+        $context['message'] = $parsed_message;
       }
     }
 
@@ -104,12 +106,10 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     // See if we're finished, and if we are, print all the finished messages.
     $context['finished'] = $sandbox['completed'] / $sandbox['total'];
     if ($context['finished'] === 1) {
-      foreach ($sandbox['other_stuff'] as $thing) {
-        if ($thing['when'] === 'after_batch') {
-          $parsed_message = ten_million_with_a_hat_do_thing($thing);
-          if (!is_null($parsed_message)) {
-            $context['message'] = $parsed_message;
-          }
+      foreach ($sandbox['other_stuff']['after_batch'] as $thing) {
+        $parsed_message = ten_million_with_a_hat_do_thing($thing);
+        if (!is_null($parsed_message)) {
+          $context['message'] = $parsed_message;
         }
       }
     }
