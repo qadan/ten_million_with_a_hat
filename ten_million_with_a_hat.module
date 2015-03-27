@@ -71,10 +71,12 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     }
     $sandbox['other_stuff'] = $sorted;
     // Run before_batch callbacks and messages.
-    foreach ($sandbox['other_stuff']['before_batch'] as $thing) {
-      $parsed_message = ten_million_with_a_hat_do_thing($thing);
-      if (!is_null($parsed_message)) {
-        $context['message'] = $parsed_message;
+    if (isset($sandbox['other_stuff']['before_batch'])) {
+      foreach ($sandbox['other_stuff']['before_batch'] as $thing) {
+        $parsed_message = ten_million_with_a_hat_do_thing($thing);
+        if (!is_null($parsed_message)) {
+          $context['message'] = $parsed_message;
+        }
       }
     }
   }
@@ -106,10 +108,12 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     // See if we're finished, and if we are, print all the finished messages.
     $context['finished'] = $sandbox['completed'] / $sandbox['total'];
     if ($context['finished'] === 1) {
-      foreach ($sandbox['other_stuff']['after_batch'] as $thing) {
-        $parsed_message = ten_million_with_a_hat_do_thing($thing);
-        if (!is_null($parsed_message)) {
-          $context['message'] = $parsed_message;
+      if (isset($sandbox['other_stuff']['after_batch'])) {
+        foreach ($sandbox['other_stuff']['after_batch'] as $thing) {
+          $parsed_message = ten_million_with_a_hat_do_thing($thing);
+          if (!is_null($parsed_message)) {
+            $context['message'] = $parsed_message;
+          }
         }
       }
     }
