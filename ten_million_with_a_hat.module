@@ -59,6 +59,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
   $sandbox = &$context['sandbox'];
   if (empty($sandbox)) {
     $context['finished'] = 0;
+    $sandbox['start_time'] = microtime(TRUE);
     $sandbox['completed'] = 0;
     $sandbox['total'] = $objects;
     $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_set);
@@ -117,6 +118,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
         }
       }
     }
+    $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
+    $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
   }
 
   // Handle the case where your repository is so messed up that there are no
@@ -125,6 +128,29 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $context['message'] = is_null($restrict) ? "For some reason, no valid collections with policies were found in your repository, so we can't really do anything." : "No valid collections were found using the restricted content model(s).";
     $context['finished'] = 1;
   }
+}
+
+/**
+ * Gets the time between a start time and the time of this method's return.
+ *
+ * @param float $start_time
+ *   The start time of execution.
+ *
+ * @return string
+ *   A string representing the execution time.
+ */
+function ten_million_with_a_hat_get_completion_time($start_time) {
+  $total_time = microtime(TRUE) - $start_time;
+  $time = array();
+  $time['hours'] = (int) ($total_time / 60 / 60);
+  $time['minutes'] = (int) ($total_time / 60) - ($time['hours'] * 60);
+  $time['seconds'] = round($total_time - ($time['hours'] * 60 * 60) - ($time['minutes'] * 60), 3),
+  $time = array_filter($time);
+  $return_string = "";
+  foreach ($time as $type => $value) {
+    $return_string .= "$value $type, ";
+  }
+  return substr($return_string, 0, -2);
 }
 
 /**
