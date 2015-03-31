@@ -82,6 +82,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     }
   }
   if (!empty($sandbox['collections'])) {
+    $execution_time_start = microtime(TRUE);
     $collection = islandora_object_load(ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['collections'])));
     $model = ten_million_with_a_hat_get_random_array_member($sandbox['collections'][$collection->id]);
     // Let's make an object wheeeee.
@@ -93,16 +94,18 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $tuque->repository->ingestObject($object);
     $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection->id);
 
-    // First, print out the ingest message.
+    // Between ingest callbacks and results.
     $completed = $sandbox['completed'] + 1;
-    $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model.";
-    // Then, do the between_ingest callbacks and print out results.
-    foreach ($sandbox['other_stuff']['between_ingests'] as $thing) {
-      $parsed_message = ten_million_with_a_hat_do_thing($thing, $object);
-      if (!is_null($parsed_message)) {
-        $context['message'] = $parsed_message;
+    if (isset($sandbox['other_stuff']['between_ingests'])) {
+      foreach ($sandbox['other_stuff']['between_ingests'] as $thing) {
+        $parsed_message = ten_million_with_a_hat_do_thing($thing, $object);
+        if (!is_null($parsed_message)) {
+          $context['message'] = $parsed_message;
+        }
       }
     }
+    $execution_time = ten_million_with_a_hat_get_completion_time($execution_time_start);
+    $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model in $execution_time.";
 
     // Update the completed counter and see if we gotta do stuff.
     $sandbox['completed']++;
@@ -117,9 +120,9 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
           }
         }
       }
+      $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
+      $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
     }
-    $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
-    $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
   }
 
   // Handle the case where your repository is so messed up that there are no
