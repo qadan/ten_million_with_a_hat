@@ -144,7 +144,7 @@ function ten_million_with_a_hat_get_completion_time($start_time) {
   $time = array();
   $time['hours'] = (int) ($total_time / 60 / 60);
   $time['minutes'] = (int) ($total_time / 60) - ($time['hours'] * 60);
-  $time['seconds'] = round($total_time - ($time['hours'] * 60 * 60) - ($time['minutes'] * 60), 3),
+  $time['seconds'] = round($total_time - ($time['hours'] * 60 * 60) - ($time['minutes'] * 60), 3);
   $time = array_filter($time);
   $return_string = "";
   foreach ($time as $type => $value) {
