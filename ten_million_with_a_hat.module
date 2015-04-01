@@ -145,9 +145,9 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
 function ten_million_with_a_hat_get_completion_time($start_time) {
   $total_time = microtime(TRUE) - $start_time;
   $time = array();
-  $time['hours'] = (int) ($total_time / 60 / 60);
-  $time['minutes'] = (int) ($total_time / 60) - ($time['hours'] * 60);
-  $time['seconds'] = round($total_time - ($time['hours'] * 60 * 60) - ($time['minutes'] * 60), 3);
+  $time['hour(s)'] = (int) ($total_time / 60 / 60);
+  $time['minute(s)'] = (int) ($total_time / 60) - ($time['hour(s)'] * 60);
+  $time['second(s)'] = round($total_time - ($time['hour(s)'] * 60 * 60) - ($time['minute(s)'] * 60), 3);
   $time = array_filter($time);
   $return_string = "";
   foreach ($time as $type => $value) {
