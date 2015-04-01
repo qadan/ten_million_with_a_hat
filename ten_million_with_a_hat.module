@@ -76,7 +76,9 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       foreach ($sandbox['other_stuff']['before_batch'] as $thing) {
         $parsed_message = ten_million_with_a_hat_do_thing($thing);
         if (!is_null($parsed_message)) {
-          $context['message'] = $parsed_message;
+          foreach ($parsed_message as $message) {
+            $context['message'] = $message;
+          }
         }
       }
     }
@@ -100,7 +102,9 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       foreach ($sandbox['other_stuff']['between_ingests'] as $thing) {
         $parsed_message = ten_million_with_a_hat_do_thing($thing, $object);
         if (!is_null($parsed_message)) {
-          $context['message'] = $parsed_message;
+          foreach ($parsed_message as $message) {
+            $context['message'] = $message;
+          }
         }
       }
     }
@@ -116,7 +120,9 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
         foreach ($sandbox['other_stuff']['after_batch'] as $thing) {
           $parsed_message = ten_million_with_a_hat_do_thing($thing);
           if (!is_null($parsed_message)) {
-            $context['message'] = $parsed_message;
+            foreach ($parsed_message as $message) {
+              $context['message'] = $message;
+            }
           }
         }
       }
@@ -294,5 +300,5 @@ function ten_million_with_a_hat_do_thing($callback, $object = NULL) {
   if (isset($callback['message'])) {
     return $callback['message'];
   }
-  return $callback_response;
+  return (array) $callback_response;
 }
