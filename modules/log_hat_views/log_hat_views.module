@@ -9,12 +9,50 @@
  * Implements hook_ten_million_with_a_hat_also_do_these_things().
  */
 function log_hat_views_ten_million_with_a_hat_also_do_these_things() {
+  module_load_include('inc', 'islandora_usage_stats', 'includes/utilities');
+  $exclude_bots = variable_get('islandora_usage_stats_exclude_bots', 1);
+  $exclude_ips = variable_get('islandora_usage_stats_ip_list', 'localhost 127.0.0.1');
+  $cooldown_time = variable_get('islandora_usage_stats_cooldown_seconds', 300);
+  variable_set('islandora_usage_stats_exclude_bots', 0);
+  variable_set('islandora_usage_stats_ip_list', '4.4.4.4');
+  variable_set('islandora_usage_stats_cooldown_seconds', -1);
   return array(
     array(
+      'callback' => 'variable_set',
+      'when' => 'before_batch',
+      'args' => array('islandora_usage_stats_exclude_bots', 0),
+    ),
+    array(
+      'callback' => 'variable_set',
+      'when' => 'before_batch',
+      'args' => array('islandora_usage_stats_ip_list', '4.4.4.4'),
+    ),
+    array(
+      'callback' => 'variable_set',
+      'when' => 'before_batch',
+      'args' => array('islandora_usage_stats_cooldown_seconds', -1),
+    ),
+    array(
       'callback' => 'log_hat_views_log_hat_view',
+      'weight' => 51,
       'when' => 'between_ingests',
     ),
-  );
+    array(
+      'callback' => 'variable_set',
+      'when' => 'after_batch',
+      'args' => array('islandora_usage_stats_exclude_bots', $exclude_bots),
+    ),
+    array(
+      'callback' => 'variable_set',
+      'when' => 'after_batch',
+      'args' => array('islandora_usage_stats_ip_list', $exclude_ips),
+    ),
+    array(
+      'callback' => 'variable_set',
+      'when' => 'after_batch',
+      'args' => array('islandora_usage_stats_cooldown_seconds', $cooldown_time),
+    ),
+  );  
 }
 
 /**
@@ -24,6 +62,10 @@ function log_hat_views_ten_million_with_a_hat_also_do_these_things() {
  *   The object to log a view for.
  */
 function log_hat_views_log_hat_view(AbstractObject $object) {
-  $tracker = new IslandoraUsageStats($object->id);
-  $tracker->logObjectView();
+  module_load_include('inc', 'islandora_usage_stats', 'includes/utilities');
+  $num_views = mt_rand(1, 100);
+  for ($i = 0; $i <= $num_views; $i++) {
+    islandora_usage_stats_log_object_view($object);
+  }
+  return "Logged $num_views views on {$object->id}.";
 }

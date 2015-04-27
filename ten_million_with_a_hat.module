@@ -296,9 +296,10 @@ function ten_million_with_a_hat_do_thing($callback, $object = NULL) {
   }
 
   // If there's a message, that gets priority as the response. Otherwise, give
-  // back whatever came from the callback, even if it's NULL.
+  // back whatever came from the callback, even if it's NULL. Either way, we
+  // cast it to an array so we can accept one or more.
   if (isset($callback['message'])) {
-    return $callback['message'];
+    return (array) $callback['message'];
   }
   return (array) $callback_response;
 }
