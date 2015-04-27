@@ -52,7 +52,7 @@ function log_hat_views_ten_million_with_a_hat_also_do_these_things() {
       'when' => 'after_batch',
       'args' => array('islandora_usage_stats_cooldown_seconds', $cooldown_time),
     ),
-  );  
+  );
 }
 
 /**
