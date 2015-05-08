@@ -4,4 +4,5 @@ core = 7.x
 version = 7.x-dev
 dependencies[] = islandora
 dependencies[] = islandora_basic_collection
+dependencies[] = simpletest
 package = Ten Million with a Hat
