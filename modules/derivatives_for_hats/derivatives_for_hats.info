@@ -1,0 +1,6 @@
+name = Derivatives for Hats
+description = Attempts to generate derivatives for datastreams from the OBJ datastream.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+package = Ten Million with a Hat

@@ -60,34 +60,9 @@ function objs_for_hats_put_obj_on_hat(AbstractObject $object) {
       $obj_datastream->mimetype = $file['mimetype'];
       $obj_datastream->label = $file['filename'];
       $object->ingestDatastream($obj_datastream);
+      return "Added OBJ datastream to {$object->id} from {$file['uri']}.";
     }
   }
-  // Recreates islandora_do_batch_derivatives() in immediate mode.
-  $results = array();
-  module_load_include('inc', 'islandora', 'includes/utilities');
-  module_load_include('inc', 'islandora', 'includes/derivatives');
-  $options = array(
-    'destination_dsid' => 'OBJ',
-  );
-  $hooks = islandora_invoke_hook_list(ISLANDORA_DERVIATIVE_CREATION_HOOK, $object->models, array($object));
-  uasort($hooks, 'drupal_sort_weight');
-  $hooks = islandora_filter_derivatives($hooks, $options, $object);
-  foreach ($hooks as $hook) {
-    if (isset($hook['file'])) {
-      require_once $hook['file'];
-    }
-    foreach ($hook['function'] as $function) {
-      if (function_exists($function)) {
-        $logs = call_user_func($function, $object, TRUE, $hook);
-        foreach ($logs as $log) {
-          foreach ($log['messages'] as $message) {
-            $results[] = $message;
-          }
-        }
-      }
-    }
-  }
-  return $results;
 }
 
 /**
