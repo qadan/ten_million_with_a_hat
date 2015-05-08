@@ -1,0 +1,6 @@
+name = Defer Hat Derivatives
+description = Sets the "defer derivatives" flag on objects' RELS-EXT.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+package = Ten Million with a Hat

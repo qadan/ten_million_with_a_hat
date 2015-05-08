@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * Sets the "defer derivatives" flag in object relationships.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function defer_hat_derivatives_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    array(
+      'callback' => 'defer_hat_derivatives_set_flag',
+      'weight' => 6,
+      'when' => 'between_ingests',
+    ),
+  );
+}
+
+/**
+ * Sets the flag for deferring derivatives.
+ *
+ * @param AbstractObject $object
+ *   The object to defer derivatives for.
+ */
+function defer_hat_derivatives_set_flag(AbstractObject $object) {
+  $object->relationships->add('http://islandora.ca/ontology/relsext#', 'deferDerivatives', 'true');
+}
