@@ -10,16 +10,6 @@
  */
 function objs_for_hats_ten_million_with_a_hat_also_do_these_things() {
   return array(
-    // We would much prefer to generate derivatives at each individual time of
-    // ingest, rather than in bulk after the whole thing is done.
-    array(
-      'callback' => 'objs_for_hats_shut_off_derivative_generation',
-      'when' => 'before_batch',
-    ),
-    array(
-      'callback' => 'objs_for_hats_turn_on_derivative_generation_again',
-      'when' => 'after_batch',
-    ),
     array(
       'callback' => 'objs_for_hats_put_obj_on_hat',
       // We should try to do this long after any other OBJs may be created.
@@ -27,22 +17,6 @@ function objs_for_hats_ten_million_with_a_hat_also_do_these_things() {
       'when' => 'between_ingests',
     ),
   );
-}
-
-/**
- * Shuts off derivative generation.
- */
-function objs_for_hats_shut_off_derivative_generation() {
-  variable_set('islandora_defer_derivatives_on_ingest', TRUE);
-  return "Derivative generation has been shut off to prefer manually triggering derivative generation.";
-}
-
-/**
- * Turns it on again. I dunno why you're reading this.
- */
-function objs_for_hats_turn_on_derivative_generation_again() {
-  variable_set('islandora_defer_derivatives_on_ingest', FALSE);
-  return "Derivative generation has been turned on again.";
 }
 
 /**

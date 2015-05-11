@@ -50,7 +50,12 @@ function derivatives_for_hats_generate_derivatives(AbstractObject $object) {
           $logs = call_user_func($function, $object, TRUE, $hook);
           foreach ($logs as $log) {
             if ($log[0]['message']) {
-              $results[] = str_replace('@pid', $object->id, $log[0]['message']);
+              $message = $log[0]['message'];
+              $message_sub = isset($log[0]['message_sub']) ? $log[0]['message_sub'] : array();
+              foreach ($message_sub as $sub => $value) {
+                $message = str_replace($sub, $value, $message);
+              }
+              $results[] = $message;
             }
           }
         }
