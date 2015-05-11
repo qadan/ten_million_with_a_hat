@@ -14,4 +14,5 @@ command:
 
 `drush -u 1 tmhi --objects=(number of pages to put in your book) --restrict-cms=islandora:pageCModel`
 
-to just generate a book.
+to just generate a book. Bear in mind that no solution packs natively accept
+pages as a content model, so you'll have to add it to a collection manually.
