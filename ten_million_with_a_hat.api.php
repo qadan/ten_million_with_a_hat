@@ -46,7 +46,7 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
       ),
       'callback' => 'add_second_hat_put_on_second_hat',
       'weight' => 5,
-      'when' => 'before_batch',
+      'when' => 'between_ingests',
       'message' => 'More hats!',
     ),
     'Change the hat colour to blue!' => array(
@@ -57,7 +57,14 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
       'args' => array($colour),
       // Plus, this theoretical callback should be run before the one above.
       'weight' => 4,
-      // We could put a 'when' here, but it defaults to between_ingests.
+      // This should be done for every new object.
+      'when' => 'between_ingests',
+    ),
+    'Display a message!' => array(
+      // We can display a message by just using 'message' without 'callback'.
+      'message' => "All hats have been coloured $colour, and an additional hat has been applied per-hat.",
+      // This message will display once, after the batch is complete.
+      'when' => 'after_batch',
     ),
   );
 }
