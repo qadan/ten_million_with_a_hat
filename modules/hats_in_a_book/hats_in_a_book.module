@@ -10,6 +10,7 @@
  */
 function hats_in_a_book_ten_million_with_a_hat_also_do_these_things() {
   global $user;
+  cache_clear_all('hats_in_a_book_current_page', 'cache');
   $tuque = islandora_get_tuque_connection();
   $book = $tuque->repository->constructObject('book');
   $book->label = "Book hat";
