@@ -23,4 +23,4 @@ USAGE
 CUSTOMIZATION
 -------------
 
-Two hooks are available, `hook_ten_million_with_a_hat_also_do_these_things` and `hook_ten_million_with_a_hat_also_say_these_things`, to modify each ingested object. Check ten_million_with_a_hat.api.php for more details.
+A hook is available, `hook_ten_million_with_a_hat_also_do_these_things`, to modify each ingested object. Check ten_million_with_a_hat.api.php for more details.
