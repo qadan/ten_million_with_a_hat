@@ -194,15 +194,12 @@ function ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_se
   $pids = array();
 
   // Now, let's filter the collection list.
-  switch ($collection_set['type']) {
-    case 'restrict':
-      $collections = array_intersect($collections, $collection_set['pids']);
-      break;
-
-    case 'exclude':
-      $collections = array_diff($collections, $collection_set['pids']);
-      break;
-  }
+  $array_fns = array(
+    'restrict' => 'array_intersect',
+    'exclude' => 'array_diff',
+  );
+  $array_fn = $array_fns[$collection_set['type']];
+  $collections = $array_fn($collections, $collection_set['pids']);
 
   // Alright, now to filter the content models.
   foreach ($collections as $collection) {
@@ -217,16 +214,8 @@ function ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_se
         $pids[$collection] = $models;
 
         // Figure out restriction or exclusion of content models.
-        switch ($cm_set['type']) {
-          case 'restrict':
-            $pids[$collection] = array_values(array_intersect($pids[$collection], $cm_set['pids']));
-            break;
+        $pids[$collection] = array_values($array_fn($pids[$collection], $cm_set['pids']));
 
-          case 'exclude':
-            $pids[$collection] = array_values(array_diff($pids[$collection], $cm_set['pids']));
-            break;
-
-        }
         // If that process leaves the PID set empty, dump that collection.
         if (empty($pids[$collection])) {
           unset($pids[$collection]);
