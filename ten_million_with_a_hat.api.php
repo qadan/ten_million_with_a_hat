@@ -27,9 +27,9 @@
  *     argument. If the callback returns a string, it will be used as a message
  *     for drush to print out, provided that the 'message' is not set in this
  *     hook array.
- *   - 'args': an array of arguments acceptable to
- *     call_user_func_array(). Added to the beginning of this will be the Fedora
- *     object being worked with.
+ *   - 'args': an array of arguments acceptable to call_user_func_array(). in
+ *     the case of a between_ingests 'when' for the return value, this list will
+ *     be appended to the Fedora object currently being worked with.
  *   - 'weight': a designated weight for the execution order of
  *     callbacks.
  *   - 'message': A message to show after the callback is executed.
