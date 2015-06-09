@@ -134,7 +134,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
   // Handle the case where your repository is so messed up that there are no
   // valid collections, or where $restrict manages to restrict everything.
   else {
-    $sets_were_unconfigured = !empty($collection_set['pids'] || ($cm_set['pids'] = array('islandora:collectionCModel') && $cm_set['type'] == 'exclude');
+    $sets_were_unconfigured = !empty($collection_set['pids']) || ($cm_set['pids'] = array('islandora:collectionCModel') && $cm_set['type'] == 'exclude');
     $empty_repository_message = "For some reason, no valid collections with policies were found in your repository, so we can't really do anything.";
     $empty_pid_set_message = "No valid collections were found using the restricted content model(s).";
     $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
