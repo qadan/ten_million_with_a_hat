@@ -134,7 +134,10 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
   // Handle the case where your repository is so messed up that there are no
   // valid collections, or where $restrict manages to restrict everything.
   else {
-    $context['message'] = is_null($restrict) ? "For some reason, no valid collections with policies were found in your repository, so we can't really do anything." : "No valid collections were found using the restricted content model(s).";
+    $sets_were_unconfigured = !empty($collection_set['pids'] || ($cm_set['pids'] = array('islandora:collectionCModel') && $cm_set['type'] == 'exclude');
+    $empty_repository_message = "For some reason, no valid collections with policies were found in your repository, so we can't really do anything.";
+    $empty_pid_set_message = "No valid collections were found using the restricted content model(s).";
+    $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
     $context['finished'] = 1;
   }
 }
@@ -150,6 +153,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
  */
 function ten_million_with_a_hat_get_completion_time($start_time) {
   $total_time = microtime(TRUE) - $start_time;
+  // Math time! Populate an array with HH:MM:SS.SSS so we can filter out any
+  // parts that result in 0 and just print out valid ones.
   $time = array();
   $time['hour(s)'] = (int) ($total_time / 60 / 60);
   $time['minute(s)'] = (int) ($total_time / 60) - ($time['hour(s)'] * 60);
@@ -169,7 +174,7 @@ function ten_million_with_a_hat_get_completion_time($start_time) {
  *   An array wheeeee.
  *
  * @return string
- *   A random member of the string
+ *   A random member of the array.
  */
 function ten_million_with_a_hat_get_random_array_member($array) {
   return $array[mt_rand(0, count($array) - 1)];
@@ -284,8 +289,8 @@ function ten_million_with_a_hat_do_thing($callback, $object = NULL) {
     $callback_response = call_user_func_array($callback['callback'], $args);
   }
 
-  // If there's a message, that gets priority as the response. Otherwise, give
-  // back whatever came from the callback, even if it's NULL. Either way, we
+  // If there's a message, that gets priority as the response. Otherwise, work
+  // with whatever came from the callback, even if it's NULL. Either way, we
   // cast it to an array so we can accept one or more.
   if (isset($callback['message'])) {
     return (array) $callback['message'];
