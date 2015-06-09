@@ -31,7 +31,6 @@ function add_second_hat_model_ten_million_with_a_hat_also_do_these_things() {
  * @var array $models
  *   An array of content model PIDs to choose from.
  */
-
 function add_second_hat_model_apply_random_hat(AbstractObject $object, array $models) {
   if (count($object->models) === 2) {
     $new_model = ten_million_with_a_hat_get_random_array_member(array_diff($models, $object->models));
