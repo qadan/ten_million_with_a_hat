@@ -149,5 +149,5 @@ function callback_after_batch($MULTIPLE_PARAMS) {
   // Let's tear down the cache we established in callback_before_batch().
   $cache = cache_get('callback_index');
   cache_clear_all('callback_index', 'cache');
-  return "The number of objects ingested with more than two content models was {$cache->data}."
+  return "The number of objects ingested with more than two content models was {$cache->data}.";
 }
