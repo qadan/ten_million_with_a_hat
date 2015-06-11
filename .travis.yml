@@ -34,11 +34,15 @@ before_install:
   - ln -s $HOME/islandora_paged_content sites/all/modules/islandora_paged_content
   - sudo apt-get -y install fortune
   - drush dl date datepicker
-  - drush en --yes --user=1 ten_million_with_a_hat thumbnails_for_hats objs_for_hats log_hat_views mods_for_hats update_hat_dc hats_in_a_compound_hat hats_in_a_book tiffs_for_page_hats
+  - drush en --yes --user=1 ten_million_with_a_hat add_second_hat_model defer_hat_derivatives derivatives_for_hats thumbnails_for_hats objs_for_hats prepare_for_hat_logging log_hat_views mods_for_hats update_hat_dc hats_in_a_compound_hat hats_in_a_book tiffs_for_page_hats log_hat_downloads
 script:
   - ant -buildfile sites/all/modules/ten_million_with_a_hat/build.xml lint
   - $ISLANDORA_DIR/tests/scripts/line_endings.sh sites/all/modules/ten_million_with_a_hat
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer ten_million_with_a_hat
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer defer_hat_derivatives
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer derivatives_for_hats
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer log_hat_downloads
+  - drush coder-review --reviews=production,security,style,i18n,potx,sniffer prepare_for_hat_logging
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer objs_for_hats
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer thumbnails_for_hats
   - drush coder-review --reviews=production,security,style,i18n,potx,sniffer log_hat_views
