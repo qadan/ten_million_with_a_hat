@@ -47,11 +47,13 @@ function hats_in_a_book_add_to_book(AbstractObject $object, $book) {
     module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
     $current_page = cache_get('hats_in_a_book_current_page');
     $current_page = $current_page->data;
-    islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isPageOf', $book);
-    islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isSequenceNumber', $current_page);
-    islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isPageNumber', $current_page);
-    islandora_paged_content_set_relationship($object->relationships, ISLANDORA_RELS_EXT_URI, 'isSection', 1);
-    islandora_paged_content_set_relationship($object->relationships, FEDORA_RELS_EXT_URI, 'isMemberOf', $book);
+    $params = array(
+      'model' => 'islandora:pageCModel',
+      'parent' => $book,
+      'page_number' -> $current_page,
+      'language' -> 'eng',
+    ),
+    islandora_paged_content_add_relationships_to_child($object, $params);
     $message = "Set {$object->id} as page $page of book object $book.";
     $current_page++;
     cache_set('hats_in_a_book_current_page', $current_page);

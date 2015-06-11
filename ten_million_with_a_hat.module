@@ -2,7 +2,7 @@
 
 /**
  * @file
- * 🔟Ⓜ️ w/ 🎩.
+ * Ingests a set number of semi-random objects with given parameters and hooks.
  */
 
 /**
@@ -90,14 +90,14 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     // Let's make an object wheeeee.
     $tuque = islandora_get_tuque_connection();
     $object = $tuque->repository->constructObject($namespace);
-    $object->label = DrupalTestCase::randomName();
+    $completed = $sandbox['completed'] + 1;
+    $object->label = "Hat #" . $completed;
     $object->owner = $user->name;
     $object->models = (array) $model;
     $tuque->repository->ingestObject($object);
     $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection->id);
 
     // Between ingest callbacks and results.
-    $completed = $sandbox['completed'] + 1;
     if (isset($sandbox['other_stuff']['between_ingests'])) {
       foreach ($sandbox['other_stuff']['between_ingests'] as $thing) {
         $parsed_message = ten_million_with_a_hat_do_thing($thing, $object);

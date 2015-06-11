@@ -26,7 +26,7 @@ function mods_for_hats_ten_million_with_a_hat_also_do_these_things() {
  */
 function mods_for_hats_put_mods_on_hat(AbstractObject $object) {
   $mods = $object->constructDatastream('MODS', 'M');
-  $mods->mimetype = 'text/xml';
+  $mods->mimetype = 'application/xml';
   $mods->label = "MODS Datastream";
   $mods->setContentFromString(mods_for_hats_get_mods_for_hat());
   $object->ingestDatastream($mods);
