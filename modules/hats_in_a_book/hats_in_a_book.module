@@ -50,8 +50,8 @@ function hats_in_a_book_add_to_book(AbstractObject $object, $book) {
     $params = array(
       'model' => 'islandora:pageCModel',
       'parent' => $book,
-      'page_number' -> $current_page,
-      'language' -> 'eng',
+      'page_number' => $current_page,
+      'language' => 'eng',
     ),
     islandora_paged_content_add_relationships_to_child($object, $params);
     $message = "Set {$object->id} as page $page of book object $book.";
