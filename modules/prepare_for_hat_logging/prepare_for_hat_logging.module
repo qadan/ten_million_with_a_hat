@@ -18,13 +18,14 @@ function prepare_for_hat_logging_ten_million_with_a_hat_also_do_these_things() {
   variable_set('islandora_usage_stats_cooldown_seconds', -1);
   return array(
     array(
-      // Before the batch, inform of the old variables in the event of a catastrophy.
+      // Before the batch, inform of the old variables in the event of a
+      // catastrophy.
       'when' => 'before_batch',
       'message' => "Islandora Usage Stats variables have been overwritten for the duration of this batch. In the event " .
-                   "of a failure, the variables will have to be manually reset to their original values (" . 
-                   "islandora_usage_stats_exclude_bots: '$exclude_bots', " . 
-                   "islandora_usage_stats_ip_list: '$exclude_ips', " . 
-                   "islandora_usage_stats_cooldown_seconds: '$cooldown_time').",
+      "of a failure, the variables will have to be manually reset to their original values (" .
+      "islandora_usage_stats_exclude_bots: '$exclude_bots', " .
+      "islandora_usage_stats_ip_list: '$exclude_ips', " .
+      "islandora_usage_stats_cooldown_seconds: '$cooldown_time').",
       ),
     // Just use variable_set to replace the old values.
     array(
