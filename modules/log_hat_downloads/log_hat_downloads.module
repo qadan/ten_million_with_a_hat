@@ -9,6 +9,7 @@
  * Implements hook_ten_million_with_a_hat_also_do_these_things().
  */
 function log_hat_downloads_ten_million_with_a_hat_also_do_these_things() {
+  return array(
     array(
       'callback' => 'log_hat_downloads_log_hat_download',
       // Make sure this happens after any OBJs are created.
