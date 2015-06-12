@@ -28,11 +28,12 @@ function log_hat_downloads_ten_million_with_a_hat_also_do_these_things() {
 function log_hat_downloads_log_hat_download(AbstractObject $object) {
   if ($object['OBJ']) {
     module_load_include('inc', 'islandora_usage_stats', 'includes/utilities');
-    $num_downloads = mt_rand(1, 10);
+    $num_downloads = mt_rand(1, 9);
     for ($i = 0; $i <= $num_downloads; $i++) {
       islandora_usage_stats_log_datastream_download($object->id, 'OBJ');
       sleep(1);
     }
+    $num_downloads++;
     return "Logged $num_downloads downloads on {$object->id}.";
   }
 }
