@@ -1,0 +1,7 @@
+name = Tiffs for Page Hats
+description = Pairs with the paged content solution pack , as well as ImageMagick and fortune, to generate tiffs for page objects.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = islandora_paged_content
+package = Ten Million with a Hat

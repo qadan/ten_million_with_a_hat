@@ -1,0 +1,37 @@
+<?php
+
+/**
+ * @file
+ * Updates DC with whatever went into MODS.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function update_hat_dc_ten_million_with_a_hat_also_do_these_things() {
+  $xslt = new DOMDocument();
+  $xsl = file_get_contents(drupal_get_path('module', 'xml_form_builder') . '/transforms/mods_to_dc.xsl');
+  $xslt->loadXML($xsl);
+  return array(
+    array(
+      'callback' => 'update_hat_dc_do_what_the_module_name_says',
+      'args' => array($xslt),
+      'weight' => 6,
+      'when' => 'between_ingests',
+    ),
+  );
+}
+
+/**
+ * Does the callback that is the point of this freaking module.
+ *
+ * @param AbstractObject $object
+ *   The object to update the DC for.
+ * @param DOMDocument $xslt
+ *   The XSLT we're using (in this case, the mods_to_dc.xsl).
+ */
+function update_hat_dc_do_what_the_module_name_says(AbstractObject $object, DOMDocument $xslt) {
+  $mods = new DOMDocument();
+  $mods->loadXML($object['MODS']->content);
+  xml_form_builder_update_dc_datastream($object, $xslt, $mods);
+}

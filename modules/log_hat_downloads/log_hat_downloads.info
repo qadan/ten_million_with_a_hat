@@ -1,0 +1,7 @@
+name = Log Hat Downloads
+description = Pairs with islandora_usage_stats to log a download for each ingested OBJ datastream.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = prepare_for_hat_logging
+package = Ten Million with a Hat

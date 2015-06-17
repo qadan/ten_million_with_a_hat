@@ -1,0 +1,7 @@
+name = Hats in a Single Compound Hat
+description = Pairs with the Compound Solution Pack to add all created objects to a single compound object generated before we start.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = islandora_compound_object
+package = Ten Million with a Hat

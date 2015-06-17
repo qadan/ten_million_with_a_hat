@@ -1,0 +1,91 @@
+<?php
+
+/**
+ * @file
+ * Places page objects in a single book.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function hats_in_a_book_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    array(
+      'callback' => 'hats_in_a_book_add_to_book',
+      'when' => 'between_ingests',
+      'sandbox' => TRUE,
+    ),
+    array(
+      'when' => 'before_batch',
+      'callback' => 'hats_in_a_book_before_batch_callback',
+      'sandbox' => TRUE,
+    ),
+    array(
+      'when' => 'after_batch',
+      'callback' => 'hats_in_a_book_after_batch_callback',
+      'sandbox' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Adds the page to a book, if necessary.
+ *
+ * @param AbstractObject $object
+ *   The object to add to the book if it's a page.
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
+ */
+function hats_in_a_book_add_to_book(AbstractObject $object, &$sandbox) {
+  if (in_array('islandora:pageCModel', $object->models)) {
+    // Add the page to the book.
+    module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
+    $params = array(
+      'model' => 'islandora:pageCModel',
+      'parent' => $sandbox['hats_in_a_book_pid'],
+      'page_number' => $sandbox['hats_in_a_book_current_page'],
+      'language' => 'eng',
+    );
+    islandora_paged_content_add_relationships_to_child($object, $params);
+    $message = "Set {$object->id} as page {$sandbox['hats_in_a_book_current_page']} of book object {$sandbox['hats_in_a_book_pid']}.";
+    $sandbox['hats_in_a_book_current_page']++;
+    return $message;
+  }
+}
+
+/**
+ * Generates the book and adds a page count to the sandbox.
+ *
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
+ */
+function hats_in_a_book_before_batch_callback(&$sandbox) {
+  global $user;
+  $tuque = islandora_get_tuque_connection();
+  $book = $tuque->repository->constructObject('book');
+  $book->label = "Book hat";
+  $book->owner = $user->name;
+  $book->models = (array) 'islandora:bookCModel';
+  $book->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:bookCollection');
+  $tuque->repository->ingestObject($book);
+  // The page content model should be in the set for this to work.
+  if (!isset($sandbox['models']['islandora:pageCModel'])) {
+    $sandbox['models']['islandora:pageCModel'] = array('islandora:dummy_collection');
+  }
+  // Stick the book info in the sandbox.
+  $sandbox['hats_in_a_book_pid'] = $book->id;
+  $sandbox['hats_in_a_book_current_page'] = 1;
+}
+
+/**
+ * Re-displays the book PID after the batch.
+ *
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
+ *
+ * @return string
+ *   The message containing the book PID.
+ */
+function hats_in_a_book_after_batch_callback(&$sandbox) {
+  return "All page objects have been ingested into the book object {$sandbox['hats_in_a_book_pid']}.";
+}

@@ -1,0 +1,35 @@
+<?php
+
+/**
+ * @file
+ * Implements hook to add each new hat to a compound object.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function hats_in_a_compound_hat_ten_million_with_a_hat_also_do_these_things() {
+  global $user;
+  $tuque = islandora_get_tuque_connection();
+  $compound = $tuque->repository->constructObject('compound');
+  $compound->label = "Compound hat";
+  $compound->owner = $user->name;
+  $compound->models = (array) 'islandora:compoundCModel';
+  $tuque->repository->ingestObject($compound);
+  return array(
+    array(
+      'callback' => 'islandora_compound_object_add_parent',
+      'file' => array(
+        'type' => 'inc',
+        'module' => 'islandora_compound_object',
+        'path' => 'includes/manage.form',
+      ),
+      'args' => array($compound->id),
+      'when' => 'between_ingests',
+    ),
+    array(
+      'when' => 'after_batch',
+      'message' => "Note: all ingested objects can be found as members of the compound object {$compound->id}.",
+    ),
+  );
+}

@@ -1,0 +1,64 @@
+<?php
+
+/**
+ * @file
+ * Generates tiffs for page objects and places them in the page.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function tiffs_for_page_hats_ten_million_with_a_hat_also_do_these_things() {
+  $fortune_path = exec('which fortune');
+  $convert_path = exec('which convert');
+  if (is_executable($fortune_path) && is_executable($convert_path)) {
+    return array(
+      array(
+        'callback' => 'tiffs_for_page_hats_add_tiff_to_page',
+        // Try to do this before objs_for_hats.
+        'weight' => 49,
+        'when' => 'between_ingests',
+      ),
+    );
+  }
+  return array(
+    array(
+      'when' => 'before_batch',
+      'message' => "Unable to execute the 'fortune' and/or 'convert' executables; tiff OBJs will not be generated for pages.",
+    ),
+  );
+}
+
+/**
+ * Generates a tiff and adds it to a page.
+ *
+ * @param AbstractObject $object
+ *   The object we're working with.
+ */
+function tiffs_for_page_hats_add_tiff_to_page(AbstractObject $object) {
+  // Only do everything if it's a page.
+  if (in_array('islandora:pageCModel', $object->models)) {
+    // Generate a page and then use it as the OBJ.
+    $file_exists = tiffs_for_page_hats_make_a_tiff();
+    if ($file_exists) {
+      $tmp = file_directory_temp();
+      $obj_datastream = $object->constructDatastream('OBJ', 'M');
+      $obj_datastream->setContentFromFile("$tmp/page.tiff");
+      $obj_datastream->mimetype = 'image/tiff';
+      $obj_datastream->label = "Page tiff";
+      $object->ingestDatastream($obj_datastream);
+    }
+  }
+}
+
+/**
+ * Does the actual tiff generation.
+ *
+ * @return bool
+ *   TRUE on success or FALSE on failure.
+ */
+function tiffs_for_page_hats_make_a_tiff() {
+  $tmp = file_directory_temp();
+  exec("fortune | convert -colorspace Gray -depth 8 -background white -fill black -pointsize 72 -size 800x600 caption:@- -compress lzw -flatten +matte $tmp/page.tiff");
+  return file_exists("$tmp/page.tiff");
+}

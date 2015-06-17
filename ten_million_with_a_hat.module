@@ -2,5 +2,310 @@
 
 /**
  * @file
- * To be a module.
+ * Ingests a set number of semi-random objects with given parameters and hooks.
  */
+
+/**
+ * Does the thing with the stuff.
+ *
+ * @param int $objects
+ *   How many things we wanna do stuff with.
+ * @param array $cm_set
+ *   An array containing a 'type' of 'exclude' or 'restrict', as well as a
+ *   'pids' array of content model PIDs to perform the 'type' operation on.
+ * @param array $collection_set
+ *   An array containing a 'type' of 'exclude' or 'restrict', as well as a
+ *   'pids' array of collection PIDs to perform the 'type' operation on.
+ * @param string $namespace
+ *   The namespace to assign to ingested objects.
+ *
+ * @return array
+ *   The batch array thingy.
+ */
+function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set, $namespace) {
+  global $user;
+  return array(
+    'title' => t('Ten Million With A Hat Batch Ingest'),
+    'init_message' => ("Preparing to ingest $objects objects ..."),
+    'progress_message' => t('Time elapsed: @elapsed <br/>Estimated time remaining @estimate.'),
+    'error_message' => t('An error has occured.'),
+    'file' => drupal_get_path('module', 'ten_million_with_a_hat') . '/ten_million_with_a_hat.module',
+    'operations' => array(
+      array(
+        'ten_million_with_a_hat_ingest_batch_operation',
+        array($objects, $user, $cm_set, $collection_set, $namespace),
+      ),
+    ),
+  );
+}
+
+/**
+ * Processes the thing with the stuff.
+ *
+ * @param int $objects
+ *   The number of objects we're creating.
+ * @param object $user
+ *   The logged in user.
+ * @param array $cm_set
+ *   The content model set array defined by ten_million_with_a_hat_ingest_batch.
+ * @param array $collection_set
+ *   The collection set array defined by ten_million_with_a_hat_ingest_batch.
+ * @param string $namespace
+ *   The namespace to assign to ingested objects.
+ * @param array $context
+ *   The batch context.
+ */
+function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set, $collection_set, $namespace, &$context) {
+  $sandbox = &$context['sandbox'];
+  if (empty($sandbox)) {
+    $context['finished'] = 0;
+    $sandbox['start_time'] = microtime(TRUE);
+    $sandbox['completed'] = 0;
+    $sandbox['total'] = $objects;
+    $sandbox['models'] = ten_million_with_a_hat_get_model_pid_array($cm_set, $collection_set);
+    $sandbox['callbacks'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
+    // Sort and categorize the other stuff.
+    uasort($sandbox['callbacks'], 'drupal_sort_weight');
+    $sorted = array();
+    foreach ($sandbox['callbacks'] as $thing) {
+      $sorted[$thing['when']][] = $thing;
+    }
+    $sandbox['callbacks'] = $sorted;
+    // Run before_batch callbacks and messages.
+    if (isset($sandbox['callbacks']['before_batch'])) {
+      foreach ($sandbox['callbacks']['before_batch'] as $thing) {
+        $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
+        if (!is_null($parsed_message)) {
+          foreach ($parsed_message as $message) {
+            $context['message'] = $message;
+          }
+        }
+      }
+    }
+  }
+  if (!empty($sandbox['models'])) {
+    $execution_time_start = microtime(TRUE);
+    $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
+    $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
+    // Let's make an object wheeeee.
+    $tuque = islandora_get_tuque_connection();
+    $object = $tuque->repository->constructObject($namespace);
+    $completed = $sandbox['completed'] + 1;
+    $object->label = "Hat #" . $completed;
+    $object->owner = $user->name;
+    $object->models = (array) $model;
+    $tuque->repository->ingestObject($object);
+    $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection);
+
+    // Between ingest callbacks and results.
+    if (isset($sandbox['callbacks']['between_ingests'])) {
+      foreach ($sandbox['callbacks']['between_ingests'] as $thing) {
+        $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox, $object);
+        if (!is_null($parsed_message)) {
+          foreach ($parsed_message as $message) {
+            $context['message'] = $message;
+          }
+        }
+      }
+    }
+    $execution_time = ten_million_with_a_hat_get_completion_time($execution_time_start);
+    $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection} with model $model in $execution_time.";
+
+    // Update the completed counter and see if we gotta do stuff.
+    $sandbox['completed']++;
+    // See if we're finished, and if we are, print all the finished messages.
+    $context['finished'] = $sandbox['completed'] / $sandbox['total'];
+    if ($context['finished'] === 1) {
+      if (isset($sandbox['callbacks']['after_batch'])) {
+        foreach ($sandbox['callbacks']['after_batch'] as $thing) {
+          $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
+          if (!is_null($parsed_message)) {
+            foreach ($parsed_message as $message) {
+              $context['message'] = $message;
+            }
+          }
+        }
+      }
+      $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
+      $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
+    }
+  }
+
+  // If an incorrectly configured batch or sparse repository causes us to be
+  // unable to do anything, report that and finish immediately.
+  else {
+    $sets_were_unconfigured = !empty($collection_set['pids']) || ($cm_set['pids'] = array('islandora:collectionCModel') && $cm_set['type'] == 'exclude');
+    $empty_repository_message = "For some reason, no valid content models were found in your repository, so no objects will be ingested.";
+    $empty_pid_set_message = "No valid content models were found using the batch configuration.";
+    $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
+    $context['finished'] = 1;
+  }
+}
+
+/**
+ * Gets the time between a start time and the time of this method's return.
+ *
+ * @param float $start_time
+ *   The start time of execution.
+ *
+ * @return string
+ *   A string representing the execution time.
+ */
+function ten_million_with_a_hat_get_completion_time($start_time) {
+  $total_time = microtime(TRUE) - $start_time;
+  // Math time! Populate an array with HH:MM:SS.SSS so we can filter out any
+  // parts that result in 0 and just print out valid ones.
+  $time = array();
+  $time['hour(s)'] = (int) ($total_time / 60 / 60);
+  $time['minute(s)'] = (int) ($total_time / 60) - ($time['hour(s)'] * 60);
+  $time['second(s)'] = round($total_time - ($time['hour(s)'] * 60 * 60) - ($time['minute(s)'] * 60), 3);
+  $time = array_filter($time);
+  $return_string = "";
+  foreach ($time as $type => $value) {
+    $return_string .= "$value $type, ";
+  }
+  return substr($return_string, 0, -2);
+}
+
+/**
+ * Raaaaaaandom! This description ends in a full stop, so THERE, coder-review.
+ *
+ * @param array $array
+ *   An array wheeeee.
+ *
+ * @return string
+ *   A random member of the array.
+ */
+function ten_million_with_a_hat_get_random_array_member($array) {
+  return $array[mt_rand(0, count($array) - 1)];
+}
+
+/**
+ * Returns an array associating content models with configured collections.
+ *
+ * @param array $cm_set
+ *   The content model set array defined by ten_million_with_a_hat_ingest_batch.
+ * @param array $collection_set
+ *   The collection set array defined by ten_million_with_a_hat_ingest_batch.
+ *
+ * @return array
+ *   An associative using content model PIDs as keys, and arrays of collection
+ *   PIDs as values.
+ */
+function ten_million_with_a_hat_get_model_pid_array($cm_set, $collection_set) {
+  // When filtering or excluding, we'll be using these array functions.
+  $array_fns = array(
+    'restrict' => 'array_intersect',
+    'exclude' => 'array_diff',
+  );
+
+  // Generate a collection PID array.
+  $collections = array_values(array_map(function($collection) {
+    return $collection['pid'];
+  }, islandora_basic_collection_get_collections()));
+  $collections = $array_fns[$collection_set['type']]($collections, $collection_set['pids']);
+
+  // Generate a content model PID array.
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $content_models = array_values(array_map(function($content_model) {
+    return $content_model['pid'];
+  }, islandora_get_content_models()));
+  $content_models = $array_fns[$cm_set['type']]($content_models, $cm_set['pids']);
+
+  // Attach collections to content models.
+  $model_collections = array_fill_keys($content_models, array());
+  foreach ($collections as $collection) {
+    $loaded_collection = islandora_object_load($collection);
+    if (isset($loaded_collection['COLLECTION_POLICY'])) {
+      $collection_models = ten_million_with_a_hat_get_content_models($loaded_collection);
+      if ($collection_models) {
+        $collection_models = array_intersect($collection_models, $content_models);
+        foreach ($collection_models as $collection_model) {
+          if (isset($model_collections[$collection_model])) {
+            $model_collections[$collection_model][] = $collection;
+          }
+        }
+      }
+    }
+  }
+
+  // If the content models were set by restriction, we need to keep them.
+  if ($cm_set['type'] === 'restrict') {
+    foreach ($model_collections as &$model_collection) {
+      if (empty($model_collection)) {
+        $model_collection[] = "islandora:dummy_collection";
+      }
+    }
+  }
+  $model_collections = array_filter($model_collections);
+  return $model_collections;
+}
+
+/**
+ * Gets the content models from the collection policy.
+ *
+ * @param AbstractObject $collection
+ *   The collection to get the policy from.
+ *
+ * @return string|bool
+ *   A random content model PID, or FALSE on failure.
+ */
+function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
+  // It should be guaranteed to have a collection policy by the time we get to
+  // this point, but you just never know what some people are gonna do.
+  try {
+    $policy = new CollectionPolicy($collection['COLLECTION_POLICY']->content);
+  }
+  catch (Exception $e) {
+    return FALSE;
+  }
+  return array_keys($policy->getContentModels());
+}
+
+/**
+ * Does a thing and maybe returns a message.
+ *
+ * @param array $callback
+ *   The callback array returned by the also_do_these_things hook.
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
+ * @param AbstractObject|null $object
+ *   The object currently being worked with. If it's needed, pass it in, and it
+ *   will be set as the first parameter when the callback is run; otherwise,
+ *   just leave it as NULL.
+ *
+ * @return string|null
+ *   The parsed message to display, or NULL if nothing will be displayed.
+ */
+function ten_million_with_a_hat_do_thing($callback, &$sandbox, $object = NULL) {
+  // Load an include if we must.
+  if (isset($callback['file'])) {
+    module_load_include($callback['file']['type'], $callback['file']['module'], $callback['file']['path']);
+  }
+
+  // Set up the args array. If $object was passed in, add it.
+  $args = array();
+  if (is_object($object) && is_subclass_of($object, 'AbstractObject')) {
+    $args[] = $object;
+  }
+  if (isset($callback['args'])) {
+    $args = array_merge($args, $callback['args']);
+  }
+  if (isset($callback['sandbox'])) {
+    $args[] = &$sandbox;
+  }
+
+  // Do the thing if there is one, and get the response.
+  $callback_response = NULL;
+  if (isset($callback['callback'])) {
+    $callback_response = call_user_func_array($callback['callback'], $args);
+  }
+
+  // If there's a message, that gets priority as the response. Otherwise, work
+  // with whatever came from the callback, even if it's NULL. Either way, we
+  // cast it to an array so we can accept one or more.
+  if (isset($callback['message'])) {
+    return (array) $callback['message'];
+  }
+  return (array) $callback_response;
+}

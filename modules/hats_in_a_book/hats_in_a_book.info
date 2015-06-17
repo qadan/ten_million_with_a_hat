@@ -1,0 +1,7 @@
+name = Hats in a Book
+description = Pairs with the Book solution pack to place pages inside books.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = islandora_book
+package = Ten Million with a Hat

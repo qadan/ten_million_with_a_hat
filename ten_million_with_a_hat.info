@@ -3,4 +3,5 @@ description = Ingests lots of objects.
 core = 7.x
 version = 7.x-dev
 dependencies[] = islandora
-package = Islandora Tools
+dependencies[] = islandora_basic_collection
+package = Ten Million with a Hat

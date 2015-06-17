@@ -1,0 +1,38 @@
+<?php
+
+/**
+ * @file
+ * Sets the "defer derivatives" flag in object relationships.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function defer_hat_derivatives_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    array(
+      'callback' => 'defer_hat_derivatives_shut_off_derivative_generation',
+      'when' => 'before_batch',
+    ),
+    array(
+      'callback' => 'defer_hat_derivatives_turn_on_derivative_generation_again',
+      'when' => 'after_batch',
+    ),
+  );
+}
+
+/**
+ * Shuts off derivative generation.
+ */
+function defer_hat_derivatives_shut_off_derivative_generation() {
+  variable_set('islandora_defer_derivatives_on_ingest', TRUE);
+  return "Derivative generation has been shut off to prefer manually triggering derivative generation.";
+}
+
+/**
+ * Turns it on again. I dunno why you're reading this.
+ */
+function defer_hat_derivatives_turn_on_derivative_generation_again() {
+  variable_set('islandora_defer_derivatives_on_ingest', FALSE);
+  return "Derivative generation has been turned on again.";
+}

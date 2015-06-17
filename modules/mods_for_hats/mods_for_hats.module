@@ -1,0 +1,162 @@
+<?php
+
+/**
+ * @file
+ * Adds a generic MODS to hats that contains randomly-pulled entries.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function mods_for_hats_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    array(
+      'callback' => 'mods_for_hats_put_mods_on_hat',
+      'weight' => 5,
+      'when' => 'between_ingests',
+    ),
+  );
+}
+
+/**
+ * Adds a randomized MODS string to a hat.
+ *
+ * @param AbstractObject $object
+ *   The object to put the MODS on.
+ */
+function mods_for_hats_put_mods_on_hat(AbstractObject $object) {
+  $mods = $object->constructDatastream('MODS', 'M');
+  $mods->mimetype = 'application/xml';
+  $mods->label = "MODS Datastream";
+  $mods->setContentFromString(mods_for_hats_get_mods_for_hat());
+  $object->ingestDatastream($mods);
+}
+
+/**
+ * Generates a MODS datastream to put on the hat.
+ *
+ * @return string
+ *   MODS for your hat!
+ */
+function mods_for_hats_get_mods_for_hat() {
+  $spin_the_wheel = array(
+    'title' => '',
+    'sub_title' => '',
+    'name' => '',
+    'role' => '',
+    'type_of_resource' => '',
+    'genre' => '',
+    'date_issued' => '',
+    'publisher' => '',
+    'country' => '',
+    'place' => '',
+    'abstract' => '',
+    'note' => '',
+  );
+  array_walk($spin_the_wheel, 'mods_for_hats_spin_the_wheel_yay');
+  return <<<XML
+<?xml version="1.0"?>
+<mods xmlns="http://www.loc.gov/mods/v3" xmlns:mods="http://www.loc.gov/mods/v3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <titleInfo>
+    <title>{$spin_the_wheel['title']}</title>
+    <subTitle>{$spin_the_wheel['sub_title']}</subTitle>
+  </titleInfo>
+  <name type="personal">
+    <namePart>{$spin_the_wheel['name']}</namePart>
+    <role>
+      <roleTerm authority="marcrelator" type="text">Author</roleTerm>
+    </role>
+  </name>
+  <typeOfResource>{$spin_the_wheel['type_of_resource']}</typeOfResource>
+  <genre authority="marcgt">{$spin_the_wheel['genre']}</genre>
+  <originInfo>
+    <dateIssued>{$spin_the_wheel['date_issued']}</dateIssued>
+    <publisher>{$spin_the_wheel['publisher']}</publisher>
+    <place>
+      <placeTerm authority="marccountry" type="code">{$spin_the_wheel['country']}</placeTerm>
+    </place>
+    <place>
+      <placeTerm type="text">{$spin_the_wheel['place']}</placeTerm>
+    </place>
+  </originInfo>
+  <abstract>{$spin_the_wheel['abstract']}</abstract>
+  <note>{$spin_the_wheel['note']}</note>
+</mods>
+XML;
+}
+
+/**
+ * Randomize all the elements! But do so with a full stop.
+ *
+ * @param string $text
+ *   The text of the element.
+ * @param string $key
+ *   The key we are editing.
+ */
+function mods_for_hats_spin_the_wheel_yay(&$text, $key) {
+  if ($key === 'date_issued') {
+    $date = mt_rand(0, time());
+    return date("Y-m-d", $date);
+  }
+  $random_text = array(
+    'people named Kevin',
+    'hair',
+    'whatever',
+    'things',
+    'a nice chicken soup',
+    'whales',
+    'unicorns',
+    'cellular phones',
+    'nuclear waste',
+    'forks',
+    'television shows from the 80s that don\'t stand the test of time',
+    'this particular randomly generated string',
+    'walls',
+    'paper mache masks',
+    'the entire population of Sweden',
+    'libraries',
+    'a brick to the face',
+    'that robot from that one movie',
+    'pencil lead',
+    'five pieces of paper',
+    'a blast cap',
+    'an oil pan',
+    'scented candles',
+    'a really long array',
+    'space',
+    'the andromeda galaxy',
+    'the laughter of children',
+    'the reckoning',
+    'a tupperware container that someone microwaved tomato sauce in and now it has a permanent red tinge',
+    'big brother',
+    'the last day of summer',
+    'the crest of a wave',
+    'a lovely sunset',
+    'that weird guy from high school',
+    'the cruft on the bottom of your mug',
+    'those monsters from that movie that they didn\'t call zombies because everyone is sick of zombies but they\'re totally zombies',
+    'a hat',
+    'several hats',
+    'EVERY hat',
+    'the most recent song you added to iTunes',
+    'one of those temporary tattoos you stick on with water',
+    'Africa',
+    'a face that could launch a thousand ships',
+    'a face that could launch about twelve ships',
+    'a face that could launch three ships, or maybe five on a good day',
+    'a ship that launched a face?',
+    'an email marked as important that is actually important',
+    'a half-eaten bowl of watercress salad',
+    'a hotel in NYC',
+    'the entire cast of Cats from the 1982 season',
+    'whoever that woman was from Murder She Wrote',
+    'an aerobics calendar from 1987',
+    'the fuuuuutuuuuure oooooh',
+    'PVC tubing',
+    'copper tubing',
+    'internet tubing',
+    'the second-to-last entry in a list',
+    'my favourite television show that I can\'t tell anyone about because I\'m embarassed about it',
+  );
+  $text = ten_million_with_a_hat_get_random_array_member($random_text);
+}

@@ -1,0 +1,69 @@
+<?php
+
+/**
+ * @file
+ * Derivatives for hats!
+ *
+ * Just a note-y note: this doesn't depend on objs_for_hats as OBJ datastreams
+ * could be generated via another method; it just checks if the datastream
+ * exists.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function derivatives_for_hats_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    array(
+      'callback' => 'derivatives_for_hats_generate_derivatives',
+      // OBJs for hats is weighted at 50.
+      'weight' => 51,
+      'when' => 'between_ingests',
+    ),
+  );
+}
+
+/**
+ * Attempts to generate derivatives from the object OBJ datastream.
+ *
+ * @param AbstractObject $object
+ *   The object to derive for.
+ */
+function derivatives_for_hats_generate_derivatives(AbstractObject $object) {
+  if ($object['OBJ']) {
+    // Recreates islandora_do_batch_derivatives() in immediate mode.
+    $results = array();
+    module_load_include('inc', 'islandora', 'includes/utilities');
+    module_load_include('inc', 'islandora', 'includes/derivatives');
+    $options = array(
+      'source_dsid' => 'OBJ',
+    );
+    $hooks = islandora_invoke_hook_list(ISLANDORA_DERVIATIVE_CREATION_HOOK, $object->models, array($object));
+    uasort($hooks, 'drupal_sort_weight');
+    $hooks = islandora_filter_derivatives($hooks, $options, $object);
+    foreach ($hooks as $hook) {
+      if (isset($hook['file'])) {
+        require_once $hook['file'];
+      }
+      foreach ($hook['function'] as $function) {
+        if (function_exists($function)) {
+          $logs = call_user_func($function, $object, TRUE, $hook);
+          foreach ($logs as $log) {
+            if ($log[0]['message']) {
+              $message = $log[0]['message'];
+              $message_sub = isset($log[0]['message_sub']) ? $log[0]['message_sub'] : array();
+              foreach ($message_sub as $sub => $value) {
+                $message = str_replace($sub, $value, $message);
+              }
+              $results[] = $message;
+            }
+          }
+        }
+      }
+    }
+    return $results;
+  }
+  else {
+    return "No OBJ datastream found on {$object->id}.";
+  }
+}
