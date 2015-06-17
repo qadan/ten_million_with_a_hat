@@ -63,17 +63,17 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $sandbox['completed'] = 0;
     $sandbox['total'] = $objects;
     $sandbox['models'] = ten_million_with_a_hat_get_model_pid_array($cm_set, $collection_set);
-    $sandbox['other_stuff'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
+    $sandbox['callbacks'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
     // Sort and categorize the other stuff.
-    uasort($sandbox['other_stuff'], 'drupal_sort_weight');
+    uasort($sandbox['callbacks'], 'drupal_sort_weight');
     $sorted = array();
-    foreach ($sandbox['other_stuff'] as $thing) {
+    foreach ($sandbox['callbacks'] as $thing) {
       $sorted[$thing['when']][] = $thing;
     }
-    $sandbox['other_stuff'] = $sorted;
+    $sandbox['callbacks'] = $sorted;
     // Run before_batch callbacks and messages.
-    if (isset($sandbox['other_stuff']['before_batch'])) {
-      foreach ($sandbox['other_stuff']['before_batch'] as $thing) {
+    if (isset($sandbox['callbacks']['before_batch'])) {
+      foreach ($sandbox['callbacks']['before_batch'] as $thing) {
         $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
         if (!is_null($parsed_message)) {
           foreach ($parsed_message as $message) {
@@ -98,8 +98,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection);
 
     // Between ingest callbacks and results.
-    if (isset($sandbox['other_stuff']['between_ingests'])) {
-      foreach ($sandbox['other_stuff']['between_ingests'] as $thing) {
+    if (isset($sandbox['callbacks']['between_ingests'])) {
+      foreach ($sandbox['callbacks']['between_ingests'] as $thing) {
         $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox, $object);
         if (!is_null($parsed_message)) {
           foreach ($parsed_message as $message) {
@@ -116,8 +116,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     // See if we're finished, and if we are, print all the finished messages.
     $context['finished'] = $sandbox['completed'] / $sandbox['total'];
     if ($context['finished'] === 1) {
-      if (isset($sandbox['other_stuff']['after_batch'])) {
-        foreach ($sandbox['other_stuff']['after_batch'] as $thing) {
+      if (isset($sandbox['callbacks']['after_batch'])) {
+        foreach ($sandbox['callbacks']['after_batch'] as $thing) {
           $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
           if (!is_null($parsed_message)) {
             foreach ($parsed_message as $message) {

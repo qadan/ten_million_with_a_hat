@@ -15,31 +15,47 @@
  * or 'message' in the array, though, so probably don't do that.
  *
  * @return array
- *   An associative array of callback arrays to execute, containing:
+ *   An associative array of callback arrays to execute and/or message arrays
+ *   to display to the Drush log (or potentially combinations of the two),
+ *   containing:
  *   - 'when' (mandatory): one of three possible values - 'before_batch',
- *     'between_ingests', or 'after_batch', to designate when this should be
- *     run.
- *   - 'file': an array containing 'type', 'module' and 'path', as
- *     one would pass these parameters to module_load_include().
+ *     'between_ingests', or 'after_batch', to designate when this callback
+ *     should be run and/or message should be displayed.
+ *   - 'file': an array containing 'type', 'module' and 'path', as one would
+ *     pass these parameters to module_load_include().
  *   - 'callback': the name or class/method array for call_user_func_array()
  *     to execute. Note that callbacks run using the between_ingests 'when'
  *     must accept the Fedora object currently being worked with as the first
  *     argument. If the callback returns a string, it will be used as a message
  *     for drush to print out, provided that the 'message' is not set in this
  *     hook array.
- *   - 'args': an array of arguments acceptable to call_user_func_array(). in
+ *   - 'args': an array of arguments acceptable to call_user_func_array(). In
  *     the case of a between_ingests 'when' for the return value, this list will
  *     be appended to the Fedora object currently being worked with.
  *   - 'sandbox': a boolean representing whether or not the batch 
  *     $context['sandbox'] array should be appended to the list of callback
  *     arguments by reference. Consider only using this if you actually require
  *     the batch sandbox so that variables aren't being passed around
- *     unnecessarily. If set, then the last argument your module accepts MUST
- *     be the sandbox, passed in by reference. Defaults to FALSE.
- *   - 'weight': a designated weight for the execution order of
- *     callbacks.
- *   - 'message': A message to show after the callback is executed.
- *     Overrides any return value from the callback.
+ *     unnecessarily. If set, then the last argument your callback accepts MUST
+ *     be the sandbox, passed in by reference. It may be useful to note that
+ *     the batch context's sandbox array also includes the 'models' and 
+ *     'callbacks' arrays. The former is an associative array of content model
+ *     PIDs paired with arrays of collection PIDs representing which content
+ *     models are valid for ingest and which collections are valid as
+ *     destinations for those types of objects; modifying this can allow you to
+ *     force the inclusion or exclusion of content models and shape where
+ *     objects from those content models end up. The latter is the weighted and
+ *     sorted array of callbacks and/or messages - it contains three keys that
+ *     match the 'when' strings defined above, each of which are associated
+ *     with an array containing the callbacks for that execution time, as they
+ *     are defined by the return values of this very hook. This can allow you
+ *     to modify existing hooks or even remove them if they may cause conflicts.
+ *     Note that the sandbox also contains the batch start_time, as well as the
+ *     number of objects completed and total, so exercise caution when messing
+ *     with it. Defaults to FALSE.
+ *   - 'weight': a designated weight for the execution order of callbacks.
+ *   - 'message': A message to show after the callback is executed. Overrides
+ *     any return value from the callback.
  */
 function hook_ten_million_with_a_hat_also_do_these_things() {
   // If we require a variable that won't change per-object (e.g., the PID of a
