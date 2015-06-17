@@ -25,16 +25,20 @@ Install as usual, see [this](https://drupal.org/documentation/install/modules-th
 
 ## Troubleshooting/Issues
 
-Having problems or solved a problem? Check out the Islandora google groups for a solution.
-
-* [Islandora Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora)
-* [Islandora Dev Group](https://groups.google.com/forum/?hl=en&fromgroups#!forum/islandora-dev)
+Having problems or solved a problem? Contact [discoverygarden](http://support.discoverygarden.ca).
 
 ## Maintainers/Sponsors
 
 Current maintainers:
 
-* [discoverygarden Inc.](https://github.com/discoverygarden)
+* [discoverygarden](http://www.discoverygarden.ca)
+
+## Development
+
+If you would like to contribute to this module, please check out our helpful
+[Documentation for Developers](https://github.com/Islandora/islandora/wiki#wiki-documentation-for-developers)
+info, [Developers](http://islandora.ca/developers) section on Islandora.ca and
+contact [discoverygarden](http://support.discoverygarden.ca).
 
 ## License
 
