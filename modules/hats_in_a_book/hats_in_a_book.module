@@ -33,8 +33,6 @@ function hats_in_a_book_ten_million_with_a_hat_also_do_these_things() {
  *
  * @param AbstractObject $object
  *   The object to add to the book if it's a page.
- * @param string $book
- *   The PID of the book to add the pages to.
  * @param array $sandbox
  *   The batch $context['sandbox'] array, passed in by reference.
  */
