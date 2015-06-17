@@ -9,26 +9,21 @@
  * Implements hook_ten_million_with_a_hat_also_do_these_things().
  */
 function hats_in_a_book_ten_million_with_a_hat_also_do_these_things() {
-  global $user;
-  cache_clear_all('hats_in_a_book_current_page', 'cache');
-  $tuque = islandora_get_tuque_connection();
-  $book = $tuque->repository->constructObject('book');
-  $book->label = "Book hat";
-  $book->owner = $user->name;
-  $book->models = (array) 'islandora:bookCModel';
-  $book->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:bookCollection');
-  $tuque->repository->ingestObject($book);
-  cache_set('hats_in_a_book_current_page', 1);
   return array(
     array(
       'callback' => 'hats_in_a_book_add_to_book',
-      'args' => array($book->id),
       'when' => 'between_ingests',
+      'sandbox' => TRUE,
+    ),
+    array(
+      'when' => 'before_batch',
+      'callback' => 'hats_in_a_book_before_batch_callback',
+      'sandbox' => TRUE,
     ),
     array(
       'when' => 'after_batch',
       'callback' => 'hats_in_a_book_after_batch_callback',
-      'args' => array($book->id),
+      'sandbox' => TRUE,
     ),
   );
 }
@@ -40,37 +35,54 @@ function hats_in_a_book_ten_million_with_a_hat_also_do_these_things() {
  *   The object to add to the book if it's a page.
  * @param string $book
  *   The PID of the book to add the pages to.
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
  */
-function hats_in_a_book_add_to_book(AbstractObject $object, $book) {
+function hats_in_a_book_add_to_book(AbstractObject $object, &$sandbox) {
   if (in_array('islandora:pageCModel', $object->models)) {
     // Add the page to the book.
     module_load_include('inc', 'islandora_paged_content', 'includes/utilities');
-    $current_page = cache_get('hats_in_a_book_current_page');
-    $current_page = $current_page->data;
     $params = array(
       'model' => 'islandora:pageCModel',
-      'parent' => $book,
-      'page_number' => $current_page,
+      'parent' => $sandbox['hats_in_a_book_pid'],
+      'page_number' => $sandbox['hats_in_a_book_current_page'],
       'language' => 'eng',
     );
     islandora_paged_content_add_relationships_to_child($object, $params);
-    $message = "Set {$object->id} as page $page of book object $book.";
-    $current_page++;
-    cache_set('hats_in_a_book_current_page', $current_page);
+    $message = "Set {$object->id} as page {$sandbox['hats_in_a_book_current_page']} of book object {$sandbox['hats_in_a_book_pid']}.";
+    $sandbox['hats_in_a_book_current_page']++;
     return $message;
   }
 }
 
 /**
- * After batch callback to clean the cache and re-report the ingested book.
+ * Generates the book and adds a page count to the sandbox.
  *
- * @param string $book
- *   The PID of the book we ingested any pages into.
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
+ */
+function hats_in_a_book_before_batch_callback(&$sandbox) {
+  global $user;
+  $tuque = islandora_get_tuque_connection();
+  $book = $tuque->repository->constructObject('book');
+  $book->label = "Book hat";
+  $book->owner = $user->name;
+  $book->models = (array) 'islandora:bookCModel';
+  $book->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:bookCollection');
+  $tuque->repository->ingestObject($book);
+  $sandbox['hats_in_a_book_pid'] = $book->id;
+  $sandbox['hats_in_a_book_current_page'] = 1;
+}
+
+/**
+ * Re-displays the book PID after the batch.
+ *
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
  *
  * @return string
- *   A message re-reporting the PID of the book.
+ *   The message containing the book PID.
  */
-function hats_in_a_book_after_batch_callback($book) {
-  cache_clear_all('hats_in_a_book_current_page', 'cache');
-  return "All page objects have been ingested into the book object $book.";
+function hats_in_a_book_after_batch_callback(&$sandbox) {
+  return "All page objects have been ingested into the book object {$sandbox['hats_in_a_book_pid']}.";
 }

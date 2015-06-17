@@ -30,6 +30,12 @@
  *   - 'args': an array of arguments acceptable to call_user_func_array(). in
  *     the case of a between_ingests 'when' for the return value, this list will
  *     be appended to the Fedora object currently being worked with.
+ *   - 'sandbox': a boolean representing whether or not the batch 
+ *     $context['sandbox'] array should be appended to the list of callback
+ *     arguments by reference. Consider only using this if you actually require
+ *     the batch sandbox so that variables aren't being passed around
+ *     unnecessarily. If set, then the last argument your module accepts MUST
+ *     be the sandbox, passed in by reference. Defaults to FALSE.
  *   - 'weight': a designated weight for the execution order of
  *     callbacks.
  *   - 'message': A message to show after the callback is executed.
@@ -54,13 +60,14 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
       'when' => 'between_ingests',
     ),
     // Example 2: a callback occuring between ingests that comes from the
-    // module itself (requiring no 'file' array), takes a second argument, and
-    // prints out a static message on completion.
+    // module itself (requiring no 'file' array), takes a second argument, uses
+    // the batch sandbox, and prints out a static message on completion.
     array(
       'callback' => 'hat_colour_change_hat_colour',
       'args' => array($colour),
       'weight' => 4,
       'when' => 'between_ingests',
+      'sandbox' => TRUE,
       // It would be smarter to display this message as the return value of
       // hat_colour_change_hat_colour, as one could display a more detailed
       // message or change the contents of the message on failure. It is
@@ -76,7 +83,7 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
 }
 
 /**
- * An example of a callback between ingests.
+ * An example of a callback between ingests using the sandbox.
  *
  * @param AbstractObject $object
  *   The object that was just ingested which we may want to manupilate or pull
@@ -84,12 +91,16 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
  * @param $MULTIPLE_PARAMS
  *   Parameters passed in from the also_do_these_things hook's 'args' array.
  *   These are not passed in as an array, but as individual arguments, ordered
- *   as they were in the 'args' array.
+ *   as they were in the 'args' array. In the below example, only one argument
+ *   is passed in - a content model, represented by 
+ *   $model_passed_in_from_MULTIPLE_PARAMS.
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
  *
  * @return string|string[]|null
  *   The message to display, or an array of messages to display, or NULL to display no message.
  */
-function callback_between_ingests(AbstractObject $object, $MULTIPLE_PARAMS) {
+function callback_between_ingests(AbstractObject $object, $MULTIPLE_PARAMS, &$sandbox) {
   $object->models[] = $model_passed_in_from_MULTIPLE_PARAMS;
   $return_array = array();
   foreach ($object->models as $model) {
@@ -99,12 +110,9 @@ function callback_between_ingests(AbstractObject $object, $MULTIPLE_PARAMS) {
   // Caching, for now, is the most useful way of maintaining changing params
   // between ingests, like the incremented index in this example.
   if (count($object->models) > 2) {
-    $cache = cache_get('callback_index');
-    $data = $cache->data;
-    $object->label = "Object #" . $data;
-    $return_array[] = "{$object->id} is object number $data to have been given more than two content models; this has been reflected in the label.";
-    $data++;
-    cache_set('callback_index', $data);
+    $object->label = "Object #" . $sandbox['sample_callback_index'];
+    $return_array[] = "{$object->id} is object number {$sandbox['sample_callback_index']} to have been given more than two content models; this has been reflected in the label.";
+    $sandbox['sample_callback_index']++;
   }
 
   // Finally, return a string or array of strings to display a message, or
@@ -115,39 +123,43 @@ function callback_between_ingests(AbstractObject $object, $MULTIPLE_PARAMS) {
 }
 
 /**
- * An example before_batch callback.
- *
- * @see callback_between_ingests().
- *
- * @param MULTIPLE_PARAMS
- *   Parameters passed in from the also_do_these_things hook's 'args' array.
- *
- * @return string|string[]|null
- *   The message to display, if any.
- */
-function callback_before_batch($MULTIPLE_PARAMS) {
-  // Before or after the batch tends to be a good place to set up or tear down
-  // things that need to be maintained between ingests.
-  cache_clear_all('callback_index', 'cache');
-  $index = $starting_index_from_MULTIPLE_PARAMS;
-  // Set the index. Return nothing, as we don't wish to display a message.
-  cache_set('callback_index', $index);
-}
-
-/**
- * An example after_batch callback.
+ * An example before_batch callback using the sandbox.
  *
  * @see callback_between_ingests().
  *
  * @param $MULTIPLE_PARAMS
- *   Parameters passed in from the also_do_these_things hook's 'args' array.
+ *   Parameters passed in from the also_do_these_things hook's 'args' array. In
+ *   this example, only one is set - a starting index integer, represented by
+ *   $starting_index_from_MULTIPLE_PARAMS.
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
+ *
+ * @return string|string[]|null
+ *   The message to display, if any.
+ */
+function callback_before_batch($MULTIPLE_PARAMS, &$sandbox) {
+  // Set the index to the sandbox. Return nothing, as we don't wish to display
+  // a message.
+  $sandbox['sample_callback_index'] = $index_set_from_MULTIPLE_PARAMS;
+}
+
+/**
+ * An example after_batch callback requiring no sandbox access.
+ *
+ * @see callback_between_ingests().
+ *
+ * @param $MULTIPLE_PARAMS
+ *   Parameters passed in from the also_do_these_things hook's 'args' array. In
+ *   this example, the parameter passed in is a variable we want to give to
+ *   variable_set(), which could be useful in reconfiguring a modified Drupal
+ *   environment.
  *   
  * @return string|string[]|null
  *   The message or messages to display, if any.
  */
 function callback_after_batch($MULTIPLE_PARAMS) {
-  // Let's tear down the cache we established in callback_before_batch().
-  $cache = cache_get('callback_index');
-  cache_clear_all('callback_index', 'cache');
-  return "The number of objects ingested with more than two content models was {$cache->data}.";
+  // We could actually just set the 'callback' in the hook to 'variable_set' and
+  // then provide the below message with 'message'; this just serves as a demo.
+  variable_set('sample_drupal_variable', $value_passed_in_from_MULTIPLE_PARAMS);
+  return "The variable sample_drupal_variable has been set to $value_passed_in_from_MULTIPLE_PARAMS.";
 }

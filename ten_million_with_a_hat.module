@@ -74,7 +74,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     // Run before_batch callbacks and messages.
     if (isset($sandbox['other_stuff']['before_batch'])) {
       foreach ($sandbox['other_stuff']['before_batch'] as $thing) {
-        $parsed_message = ten_million_with_a_hat_do_thing($thing);
+        $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
         if (!is_null($parsed_message)) {
           foreach ($parsed_message as $message) {
             $context['message'] = $message;
@@ -100,7 +100,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     // Between ingest callbacks and results.
     if (isset($sandbox['other_stuff']['between_ingests'])) {
       foreach ($sandbox['other_stuff']['between_ingests'] as $thing) {
-        $parsed_message = ten_million_with_a_hat_do_thing($thing, $object);
+        $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox, $object);
         if (!is_null($parsed_message)) {
           foreach ($parsed_message as $message) {
             $context['message'] = $message;
@@ -118,7 +118,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     if ($context['finished'] === 1) {
       if (isset($sandbox['other_stuff']['after_batch'])) {
         foreach ($sandbox['other_stuff']['after_batch'] as $thing) {
-          $parsed_message = ten_million_with_a_hat_do_thing($thing);
+          $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
           if (!is_null($parsed_message)) {
             foreach ($parsed_message as $message) {
               $context['message'] = $message;
@@ -267,6 +267,8 @@ function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
  *
  * @param array $callback
  *   The callback array returned by the also_do_these_things hook.
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
  * @param AbstractObject|null $object
  *   The object currently being worked with. If it's needed, pass it in, and it
  *   will be set as the first parameter when the callback is run; otherwise,
@@ -275,7 +277,7 @@ function ten_million_with_a_hat_get_content_models(AbstractObject $collection) {
  * @return string|null
  *   The parsed message to display, or NULL if nothing will be displayed.
  */
-function ten_million_with_a_hat_do_thing($callback, $object = NULL) {
+function ten_million_with_a_hat_do_thing($callback, &$sandbox, $object = NULL) {
   // Load an include if we must.
   if (isset($callback['file'])) {
     module_load_include($callback['file']['type'], $callback['file']['module'], $callback['file']['path']);
@@ -288,6 +290,9 @@ function ten_million_with_a_hat_do_thing($callback, $object = NULL) {
   }
   if (isset($callback['args'])) {
     $args = array_merge($args, $callback['args']);
+  }
+  if (isset($callback['sandbox'])) {
+    array_push($args, &$sandbox);
   }
 
   // Do the thing if there is one, and get the response.
