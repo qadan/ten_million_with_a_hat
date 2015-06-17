@@ -70,6 +70,11 @@ function hats_in_a_book_before_batch_callback(&$sandbox) {
   $book->models = (array) 'islandora:bookCModel';
   $book->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', 'islandora:bookCollection');
   $tuque->repository->ingestObject($book);
+  // The page content model should be in the set for this to work.
+  if (!isset($sandbox['models']['islandora:pageCModel'])) {
+    $sandbox['models']['islandora:pageCModel'] = array('islandora:dummy_collection');
+  }
+  // Stick the book info in the sandbox.
   $sandbox['hats_in_a_book_pid'] = $book->id;
   $sandbox['hats_in_a_book_current_page'] = 1;
 }
