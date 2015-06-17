@@ -292,7 +292,7 @@ function ten_million_with_a_hat_do_thing($callback, &$sandbox, $object = NULL) {
     $args = array_merge($args, $callback['args']);
   }
   if (isset($callback['sandbox'])) {
-    array_push($args, &$sandbox);
+    $args[] = &$sandbox;
   }
 
   // Do the thing if there is one, and get the response.
