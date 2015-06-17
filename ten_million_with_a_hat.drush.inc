@@ -34,7 +34,7 @@ function ten_million_with_a_hat_drush_command() {
           'required' => FALSE,
         ),
         'restrict-cms' => array(
-          'description' => dt('A comma-separated list of PIDs of solution packs to limit ingested objects to. Overrides "exclude-cms".'),
+          'description' => dt('A comma-separated list of PIDs of solution packs to limit ingested objects to. Overrides "exclude-cms". Also forces content model inclusion; any restricted content models which appear in no collections will be given islandora:dummy_collection as their parent. The dummy collection will not be ingested.'),
           'required' => FALSE,
         ),
         'exclude-collections' => array(

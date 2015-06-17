@@ -62,7 +62,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $sandbox['start_time'] = microtime(TRUE);
     $sandbox['completed'] = 0;
     $sandbox['total'] = $objects;
-    $sandbox['collections'] = ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_set);
+    $sandbox['models'] = ten_million_with_a_hat_get_model_pid_array($cm_set, $collection_set);
     $sandbox['other_stuff'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
     // Sort and categorize the other stuff.
     uasort($sandbox['other_stuff'], 'drupal_sort_weight');
@@ -83,10 +83,10 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       }
     }
   }
-  if (!empty($sandbox['collections'])) {
+  if (!empty($sandbox['models'])) {
     $execution_time_start = microtime(TRUE);
-    $collection = islandora_object_load(ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['collections'])));
-    $model = ten_million_with_a_hat_get_random_array_member($sandbox['collections'][$collection->id]);
+    $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
+    $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
     // Let's make an object wheeeee.
     $tuque = islandora_get_tuque_connection();
     $object = $tuque->repository->constructObject($namespace);
@@ -95,7 +95,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $object->owner = $user->name;
     $object->models = (array) $model;
     $tuque->repository->ingestObject($object);
-    $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection->id);
+    $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection);
 
     // Between ingest callbacks and results.
     if (isset($sandbox['other_stuff']['between_ingests'])) {
@@ -109,7 +109,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       }
     }
     $execution_time = ten_million_with_a_hat_get_completion_time($execution_time_start);
-    $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection->id} with model $model in $execution_time.";
+    $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection} with model $model in $execution_time.";
 
     // Update the completed counter and see if we gotta do stuff.
     $sandbox['completed']++;
@@ -131,12 +131,12 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     }
   }
 
-  // Handle the case where your repository is so messed up that there are no
-  // valid collections, or where $restrict manages to restrict everything.
+  // If an incorrectly configured batch or sparse repository causes us to be
+  // unable to do anything, report that and finish immediately.
   else {
     $sets_were_unconfigured = !empty($collection_set['pids']) || ($cm_set['pids'] = array('islandora:collectionCModel') && $cm_set['type'] == 'exclude');
-    $empty_repository_message = "For some reason, no valid collections with policies were found in your repository, so we can't really do anything.";
-    $empty_pid_set_message = "No valid collections were found using the restricted content model(s).";
+    $empty_repository_message = "For some reason, no valid content models were found in your repository, so no objects will be ingested.";
+    $empty_pid_set_message = "No valid content models were found using the batch configuration.";
     $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
     $context['finished'] = 1;
   }
@@ -181,7 +181,7 @@ function ten_million_with_a_hat_get_random_array_member($array) {
 }
 
 /**
- * Returns the list of existing collections as PIDs.
+ * Returns an array associating content models with configured collections.
  *
  * @param array $cm_set
  *   The content model set array defined by ten_million_with_a_hat_ingest_batch.
@@ -189,49 +189,56 @@ function ten_million_with_a_hat_get_random_array_member($array) {
  *   The collection set array defined by ten_million_with_a_hat_ingest_batch.
  *
  * @return array
- *   The PID array.
+ *   An associative using content model PIDs as keys, and arrays of collection
+ *   PIDs as values.
  */
-function ten_million_with_a_hat_get_collection_pid_array($cm_set, $collection_set) {
-  // Hooookay. First, let's get a collection PID array.
-  $collections = array_values(array_map(function($collection) {
-    return $collection['pid'];
-  }, islandora_basic_collection_get_collections()));
-  $pids = array();
-
-  // Now, let's filter the collection list.
+function ten_million_with_a_hat_get_model_pid_array($cm_set, $collection_set) {
+  // When filtering or excluding, we'll be using these array functions.
   $array_fns = array(
     'restrict' => 'array_intersect',
     'exclude' => 'array_diff',
   );
-  $array_fn = $array_fns[$collection_set['type']];
-  $collections = $array_fn($collections, $collection_set['pids']);
 
-  // Alright, now to filter the content models.
+  // Generate a collection PID array.
+  $collections = array_values(array_map(function($collection) {
+    return $collection['pid'];
+  }, islandora_basic_collection_get_collections()));
+  $collections = $array_fns[$collection_set['type']]($collections, $collection_set['pids']);
+
+  // Generate a content model PID array.
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $content_models = array_values(array_map(function($content_model) {
+    return $content_model['pid'];
+  }, islandora_get_content_models()));
+  $content_models = $array_fns[$cm_set['type']]($content_models, $cm_set['pids']);
+
+  // Attach collections to content models.
+  $model_collections = array_fill_keys($content_models, array());
   foreach ($collections as $collection) {
-    $pids[$collection] = array();
     $loaded_collection = islandora_object_load($collection);
-    if (!isset($loaded_collection['COLLECTION_POLICY'])) {
-      unset($pids[$collection]);
-    }
-    else {
-      $models = ten_million_with_a_hat_get_content_models(islandora_object_load($collection));
-      if ($models) {
-        $pids[$collection] = $models;
-
-        // Figure out restriction or exclusion of content models.
-        $pids[$collection] = array_values($array_fn($pids[$collection], $cm_set['pids']));
-
-        // If that process leaves the PID set empty, dump that collection.
-        if (empty($pids[$collection])) {
-          unset($pids[$collection]);
+    if (isset($loaded_collection['COLLECTION_POLICY'])) {
+      $collection_models = ten_million_with_a_hat_get_content_models($loaded_collection);
+      if ($collection_models) {
+        $collection_models = array_intersect($collection_models, $content_models);
+        foreach ($collection_models as $collection_model) {
+          if (isset($model_collections[$collection_model])) {
+            $model_collections[$collection_model][] = $collection;
+          }
         }
-      }
-      else {
-        unset($pids[$collection]);
       }
     }
   }
-  return $pids;
+
+  // If the content models were set by restriction, we need to keep them.
+  if ($cm_set['type'] === 'restrict') {
+    foreach ($model_collections as &$model_collection) {
+      if (empty($model_collection)) {
+        $model_collection[] = "islandora:dummy_collection";
+      }
+    }
+  }
+  $model_collections = array_filter($model_collections);
+  return $model_collections;
 }
 
 /**
