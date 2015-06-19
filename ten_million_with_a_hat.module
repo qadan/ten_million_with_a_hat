@@ -173,11 +173,14 @@ function ten_million_with_a_hat_get_completion_time($start_time) {
  * @param array $array
  *   An array wheeeee.
  *
- * @return string
- *   A random member of the array.
+ * @return mixed|bool
+ *   A random member of the array, or FALSE if the array was empty.
  */
 function ten_million_with_a_hat_get_random_array_member($array) {
-  return $array[mt_rand(0, count($array) - 1)];
+  if (!empty($array)) {
+    return $array[mt_rand(0, count($array) - 1)];
+  }
+  return FALSE;
 }
 
 /**
