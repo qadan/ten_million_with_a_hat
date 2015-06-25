@@ -141,7 +141,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
       $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
     }
-  } 
+  }
 }
 
 /**

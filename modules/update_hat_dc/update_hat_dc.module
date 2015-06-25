@@ -8,7 +8,7 @@
 /**
  * Implements hook_ten_million_with_a_hat_also_do_these_things().
  */
-function update_hat_dc_ten_million_with_a_hat_also_do_these_things() { 
+function update_hat_dc_ten_million_with_a_hat_also_do_these_things() {
   return array(
     array(
       'callback' => 'update_hat_dc_do_what_the_module_name_says',
@@ -24,8 +24,6 @@ function update_hat_dc_ten_million_with_a_hat_also_do_these_things() {
  *
  * @param AbstractObject $object
  *   The object to update the DC for.
- * @param DOMDocument $xslt
- *   The XSLT we're using (in this case, the mods_to_dc.xsl).
  */
 function update_hat_dc_do_what_the_module_name_says(AbstractObject $object) {
   $xslt = new DOMDocument();
