@@ -63,27 +63,39 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $sandbox['completed'] = 0;
     $sandbox['total'] = $objects;
     $sandbox['models'] = ten_million_with_a_hat_get_model_pid_array($cm_set, $collection_set);
-    $sandbox['callbacks'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
-    // Sort and categorize the other stuff.
-    uasort($sandbox['callbacks'], 'drupal_sort_weight');
-    $sorted = array();
-    foreach ($sandbox['callbacks'] as $thing) {
-      $sorted[$thing['when']][] = $thing;
-    }
-    $sandbox['callbacks'] = $sorted;
-    // Run before_batch callbacks and messages.
-    if (isset($sandbox['callbacks']['before_batch'])) {
-      foreach ($sandbox['callbacks']['before_batch'] as $thing) {
-        $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
-        if (!is_null($parsed_message)) {
-          foreach ($parsed_message as $message) {
-            $context['message'] = $message;
+    if (!empty($sandbox['models'])) {
+      $sandbox['callbacks'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
+      // Sort and categorize the other stuff.
+      uasort($sandbox['callbacks'], 'drupal_sort_weight');
+      $sorted = array();
+      foreach ($sandbox['callbacks'] as $thing) {
+        $sorted[$thing['when']][] = $thing;
+      }
+      $sandbox['callbacks'] = $sorted;
+      // Run before_batch callbacks and messages.
+      if (isset($sandbox['callbacks']['before_batch'])) {
+        foreach ($sandbox['callbacks']['before_batch'] as $thing) {
+          $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
+          if (!is_null($parsed_message)) {
+            foreach ($parsed_message as $message) {
+              $context['message'] = $message;
+            }
           }
         }
       }
     }
   }
-  if (!empty($sandbox['models'])) {
+
+  // If an incorrectly configured batch, sparse repository, or over-eager batch
+  // hook callback leaves us with no content models, jump ship.
+  if (empty($sandbox['models'])) {
+    $sets_were_unconfigured = !empty($collection_set['pids']) || ($cm_set['pids'] = array('islandora:collectionCModel') && $cm_set['type'] == 'exclude');
+    $empty_repository_message = "For some reason, no valid content models were found in your repository, so no objects will be ingested.";
+    $empty_pid_set_message = "No valid content models were found using the batch configuration.";
+    $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
+    $context['finished'] = 1;
+  }
+  else {
     $execution_time_start = microtime(TRUE);
     $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
     $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
@@ -129,17 +141,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
       $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
       $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
     }
-  }
-
-  // If an incorrectly configured batch or sparse repository causes us to be
-  // unable to do anything, report that and finish immediately.
-  else {
-    $sets_were_unconfigured = !empty($collection_set['pids']) || ($cm_set['pids'] = array('islandora:collectionCModel') && $cm_set['type'] == 'exclude');
-    $empty_repository_message = "For some reason, no valid content models were found in your repository, so no objects will be ingested.";
-    $empty_pid_set_message = "No valid content models were found using the batch configuration.";
-    $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
-    $context['finished'] = 1;
-  }
+  } 
 }
 
 /**
