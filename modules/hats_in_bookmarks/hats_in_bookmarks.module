@@ -12,6 +12,7 @@ function hats_in_bookmarks_ten_million_with_a_hat_also_do_these_things() {
   global $user;
   $list_name = "Hat List - " . date("Y-m-d H:i:s");
   $created_list = BookmarkDatabase::createNewList($list_name, 'bookmark', $user);
+  // Share the list with everyone.
   $created_list->addUser('0');
   $id = $created_list->getId();
   return array(
