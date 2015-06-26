@@ -37,7 +37,7 @@ function hats_in_bookmarks_ten_million_with_a_hat_also_do_these_things() {
  *
  * @param AbstractObject $object
  *   The object to add to the list.
- * @param integer $id
+ * @param int $id
  *   The list ID.
  */
 function hats_in_bookmarks_add_pid_to_bookmark_list(AbstractObject $object, $id) {
