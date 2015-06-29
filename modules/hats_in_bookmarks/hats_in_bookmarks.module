@@ -1,0 +1,46 @@
+<?php
+
+/**
+ * @file
+ * Hats inside bookmarks.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function hats_in_bookmarks_ten_million_with_a_hat_also_do_these_things() {
+  global $user;
+  $list_name = "Hat List - " . date("Y-m-d H:i:s");
+  $created_list = BookmarkDatabase::createNewList($list_name, 'bookmark', $user);
+  // Share the list with everyone.
+  $created_list->addUser('0');
+  $id = $created_list->getId();
+  return array(
+    array(
+      'when' => 'before_batch',
+      'message' => "Created a bookmark list called '$list_name' (ID: $id); all objects will be added to this list.",
+    ),
+    array(
+      'when' => 'between_ingests',
+      'callback' => 'hats_in_bookmarks_add_pid_to_bookmark_list',
+      'args' => array($id),
+    ),
+    array(
+      'when' => 'after_batch',
+      'message' => "All objects can be found in a bookmark list at islandora-bookmark/listid/$id",
+    ),
+  );
+}
+
+/**
+ * Callback to add PIDs to the bookmark list.
+ *
+ * @param AbstractObject $object
+ *   The object to add to the list.
+ * @param int $id
+ *   The list ID.
+ */
+function hats_in_bookmarks_add_pid_to_bookmark_list(AbstractObject $object, $id) {
+  $list = BookmarkDatabase::getList($id);
+  $list->addPid($object->id);
+}

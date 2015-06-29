@@ -23,7 +23,7 @@ Some additional modules that implement this hook are maintained in private repos
 
 ## Jargon
 
-Because the words "object created via the Ten Million with a Hat ingest process" are a bit long to type out repeatedly in various formss and contexts, the word 'hat' or 'hats' is used to describe these objects in all instances througout the module EXCEPT:
+Because the words "object created via the Ten Million with a Hat ingest process" are a bit long to type out repeatedly in various forms and contexts, the word 'hat' or 'hats' is used to describe these objects in all instances througout the module EXCEPT:
 
 - the exact written phrase 'Ten Million with a Hat', and
 - functions, variables, constants, etc. using the string `ten_million_with_a_hat`.

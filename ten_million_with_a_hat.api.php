@@ -8,11 +8,12 @@
 /**
  * Allows additional callbacks to execute during the batch process.
  *
- * Also allows for the return of messages from these callbacks. As all keys in
- * the hook array except for 'when' are optional, one can skip the callback
- * array and simply pass back a 'message' for display purposes during the
- * batch. It would not be much use to implement this hook without a 'callback'
- * or 'message' in the array, though, so probably don't do that.
+ * Also allows for the return of messages from these callbacks, or for messages
+ * to display in tandem with (or lieu of) a callback. As all keys in the hook
+ * array except for 'when' are optional, one can skip the callback array and
+ * simply pass back a 'message' for display purposes during the batch. It would
+ * not be much use to implement this hook without a 'callback' or 'message' in
+ * the array, though, so probably don't do that.
  *
  * @return array
  *   An associative array of callback arrays to execute and/or message arrays
@@ -103,7 +104,7 @@ function hook_ten_million_with_a_hat_also_do_these_things() {
  *
  * @param AbstractObject $object
  *   The object that was just ingested which we may want to manupilate or pull
- *   information from here.
+ *   information from.
  * @param $MULTIPLE_PARAMS
  *   Parameters passed in from the also_do_these_things hook's 'args' array.
  *   These are not passed in as an array, but as individual arguments, ordered
@@ -123,18 +124,16 @@ function callback_between_ingests(AbstractObject $object, $MULTIPLE_PARAMS, &$sa
     $return_array[] = "The object {$object->id} contains the content model $model.";
   }
 
-  // Caching, for now, is the most useful way of maintaining changing params
-  // between ingests, like the incremented index in this example.
   if (count($object->models) > 2) {
     $object->label = "Object #" . $sandbox['sample_callback_index'];
     $return_array[] = "{$object->id} is object number {$sandbox['sample_callback_index']} to have been given more than two content models; this has been reflected in the label.";
     $sandbox['sample_callback_index']++;
   }
 
-  // Finally, return a string or array of strings to display a message, or
-  // return nothing to skip message display for this callback. Either way,
-  // hooks with a 'message' parameter will override this return value, so it is
-  // recommended to just use one or the other.
+  // Either return a string or array of strings to display a message, or return
+  // nothing to skip message display for this callback. Either way, hooks with a
+  // 'message' parameter will override this return value, so it is recommended
+  // to just use one or the other.
   return $return_array;
 }
 

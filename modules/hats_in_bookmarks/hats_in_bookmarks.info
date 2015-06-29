@@ -1,0 +1,7 @@
+name = Hats in Bookmarks
+description = Places all ingested objects inside a single bookmark list.
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = islandora_bookmark
+package = Ten Million with a Hat

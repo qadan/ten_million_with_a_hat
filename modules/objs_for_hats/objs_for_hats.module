@@ -53,7 +53,7 @@ function objs_for_hats_attempt_to_divine_test_obj_path(AbstractObject $object) {
     cache_set('objs_for_hats_models', objs_for_hats_generate_solution_pack_model_array(), 'cache', CACHE_TEMPORARY);
     $model_cache = cache_get('objs_for_hats_models');
   }
-  return objs_for_hats_get_path_for_model($object, $model_cache->data);
+  return ten_million_with_a_hat_get_random_array_member(objs_for_hats_get_paths_for_model($object, $model_cache->data));
 }
 
 /**
@@ -79,7 +79,7 @@ function objs_for_hats_generate_solution_pack_model_array() {
 }
 
 /**
- * Returns an appropriate path to a test file for the given object.
+ * Gets an array of paths to possible test files appropriate as an object's OBJ.
  *
  * @param AbstractObject $object
  *   The object to get the path for.
@@ -87,10 +87,11 @@ function objs_for_hats_generate_solution_pack_model_array() {
  *   The return result from objs_for_hats_generate_solution_pack_model_array().
  *
  * @return array
- *   An associative array containing the keys 'uri' for the file's URI,
- *   'filename' for the file's name, and 'mimetype' for the file's mimetype.
+ *   An array containing zero or more file arrays containing the keys 'uri' for
+ *   the file's URI, 'filename' for the file's name, and 'mimetype' for the
+ *   file's mimetype.
  */
-function objs_for_hats_get_path_for_model(AbstractObject $object, array $model_module_array) {
+function objs_for_hats_get_paths_for_model(AbstractObject $object, array $model_module_array) {
   $models = array_diff($object->models, array('fedora-system:FedoraObject-3.0'));
   if (!$model = array_shift($models)) {
     return FALSE;
@@ -100,23 +101,34 @@ function objs_for_hats_get_path_for_model(AbstractObject $object, array $model_m
   }
   module_load_include('inc', 'islandora', 'includes/mimetype.utils');
   $extensions = islandora_get_extensions_for_datastream($object, 'OBJ');
-  // XXX: Haaaaaack out that XML filetype for now instead of trying to magic up
-  // the difference between valid OBJ XML and the billion other XMLs that might
-  // be in a module's path.
-  $extensions = array_diff($extensions, array('xml'));
+  $base_path = drupal_get_path('module', $model_module_array[$model]);
+  // Conventionally, test objects are stored in a module's tests/fixtures
+  // folder; we should search there first.
+  if (file_exists($base_path . "/tests/fixtures")) {
+    $base_path .= "/tests/fixtures";
+    // XXX: The .xml extension may be valid in some cases as an OBJ, but
+    // virtually all modules will also contain unsuitable xml, and attempting
+    // to divine the difference would be a fairly significant undertaking with
+    // little payoff, so let's hack it out.
+    $extensions = array_diff($extensions, array('xml'));
+  }
+  else {
+    // Same thing here, except that since we're searching from the root of the
+    // module, rogue .txt files also may cause trouble.
+    $extensions = array_diff($extensions, array('xml', 'txt'));
+  }
+  $return_set = array();
+  $mimedetect = new MimeDetect();
   foreach ($extensions as $extension) {
-    $files = file_scan_directory(drupal_get_path('module', $model_module_array[$model]), "/.*\.$extension$/");
-    if (!empty($files)) {
-      $file = array_shift($files);
-      $mimedetect = new MimeDetect();
-      $return_set = array(
+    $files = file_scan_directory($base_path, "/.*\.$extension$/");
+    foreach ($files as $file) {
+      $return_set[] = array(
         'uri' => $file->uri,
         'filename' => $file->filename,
         'mimetype' => $mimedetect->getMimetype($file->filename),
       );
-      cache_set('obj_for_hats_models_' . $model, $return_set, 'cache', CACHE_TEMPORARY);
-      return $return_set;
     }
   }
-  return FALSE;
+  cache_set('obj_for_hats_models_' . $model, $return_set, 'cache', CACHE_TEMPORARY);
+  return $return_set;
 }
