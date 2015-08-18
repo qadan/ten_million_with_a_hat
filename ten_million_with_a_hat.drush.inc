@@ -49,6 +49,10 @@ function ten_million_with_a_hat_drush_command() {
           'description' => dt('A namespace to give to the ingested objects. Defaults to "islandora".'),
           'required' => FALSE,
         ),
+        'bucket_size' => array(
+          'description' => dt('The number of items to ingest per iteration. Defaults to 1.'),
+          'required' => FALSE,
+        ),
       ),
     ),
   );
@@ -60,7 +64,12 @@ function ten_million_with_a_hat_drush_command() {
 function drush_ten_million_with_a_hat_ingest() {
   $cm_set = drush_ten_million_with_a_hat_get_restriction_or_exclusion_array('cms');
   $collection_set = drush_ten_million_with_a_hat_get_restriction_or_exclusion_array('collections');
-  batch_set(ten_million_with_a_hat_ingest_batch(drush_get_option('objects'), $cm_set, $collection_set, drush_get_option('namespace', 'islandora')));
+  batch_set(ten_million_with_a_hat_ingest_batch(
+    drush_get_option('objects'),
+    $cm_set,
+    $collection_set,
+    drush_get_option('namespace', 'islandora'),
+    drush_get_option('bucket_size', 1)));
   drush_backend_batch_process();
 }
 
