@@ -96,26 +96,45 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $empty_pid_set_message = "No valid content models were found using the batch configuration.";
     $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
     $context['finished'] = 1;
+    return;
   }
-  else {
-    for ($i = 0; $i < $bucket_size && $context['finished'] < 1; $i++) {
-      $execution_time_start = microtime(TRUE);
-      $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
-      $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
-      // Let's make an object wheeeee.
-      $tuque = islandora_get_tuque_connection();
-      $object = $tuque->repository->constructObject($namespace);
-      $completed = $sandbox['completed'] + 1;
-      $object->label = "Hat #" . $completed;
-      $object->owner = $user->name;
-      $object->models = (array) $model;
-      $tuque->repository->ingestObject($object);
-      $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection);
 
-      // Between ingest callbacks and results.
-      if (isset($sandbox['callbacks']['between_ingests'])) {
-        foreach ($sandbox['callbacks']['between_ingests'] as $thing) {
-          $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox, $object);
+  foreach (array_fill(0, min($bucket_size, $sandbox['total'] - $sandbox['completed']), NULL) as $item) {
+    $execution_time_start = microtime(TRUE);
+    $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
+    $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
+    // Let's make an object wheeeee.
+    $tuque = islandora_get_tuque_connection();
+    $object = $tuque->repository->constructObject($namespace);
+    $completed = $sandbox['completed'] + 1;
+    $object->label = "Hat #" . $completed;
+    $object->owner = $user->name;
+    $object->models = (array) $model;
+    $tuque->repository->ingestObject($object);
+    $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection);
+
+    // Between ingest callbacks and results.
+    if (isset($sandbox['callbacks']['between_ingests'])) {
+      foreach ($sandbox['callbacks']['between_ingests'] as $thing) {
+        $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox, $object);
+        if (!is_null($parsed_message)) {
+          foreach ($parsed_message as $message) {
+            $context['message'] = $message;
+          }
+        }
+      }
+    }
+    $execution_time = ten_million_with_a_hat_get_completion_time($execution_time_start);
+    $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection} with model $model in $execution_time.";
+
+    // Update the completed counter and see if we gotta do stuff.
+    $sandbox['completed']++;
+    // See if we're finished, and if we are, print all the finished messages.
+    $context['finished'] = $sandbox['completed'] / $sandbox['total'];
+    if ($context['finished'] === 1) {
+      if (isset($sandbox['callbacks']['after_batch'])) {
+        foreach ($sandbox['callbacks']['after_batch'] as $thing) {
+          $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
           if (!is_null($parsed_message)) {
             foreach ($parsed_message as $message) {
               $context['message'] = $message;
@@ -123,27 +142,8 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
           }
         }
       }
-      $execution_time = ten_million_with_a_hat_get_completion_time($execution_time_start);
-      $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection} with model $model in $execution_time.";
-
-      // Update the completed counter and see if we gotta do stuff.
-      $sandbox['completed']++;
-      // See if we're finished, and if we are, print all the finished messages.
-      $context['finished'] = $sandbox['completed'] / $sandbox['total'];
-      if ($context['finished'] === 1) {
-        if (isset($sandbox['callbacks']['after_batch'])) {
-          foreach ($sandbox['callbacks']['after_batch'] as $thing) {
-            $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
-            if (!is_null($parsed_message)) {
-              foreach ($parsed_message as $message) {
-                $context['message'] = $message;
-              }
-            }
-          }
-        }
-        $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
-        $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
-      }
+      $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
+      $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
     }
   }
 }
