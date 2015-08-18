@@ -18,11 +18,13 @@
  *   'pids' array of collection PIDs to perform the 'type' operation on.
  * @param string $namespace
  *   The namespace to assign to ingested objects.
+ * @param int $bucket_size
+ *   The number of items to ingest per iteration.
  *
  * @return array
  *   The batch array thingy.
  */
-function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set, $namespace) {
+function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set, $namespace, $bucket_size) {
   global $user;
   return array(
     'title' => t('Ten Million With A Hat Batch Ingest'),
@@ -33,7 +35,7 @@ function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set,
     'operations' => array(
       array(
         'ten_million_with_a_hat_ingest_batch_operation',
-        array($objects, $user, $cm_set, $collection_set, $namespace),
+        array($objects, $user, $cm_set, $collection_set, $namespace, $bucket_size),
       ),
     ),
   );
@@ -55,7 +57,7 @@ function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set,
  * @param array $context
  *   The batch context.
  */
-function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set, $collection_set, $namespace, &$context) {
+function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set, $collection_set, $namespace, $bucket_size, &$context) {
   $sandbox = &$context['sandbox'];
   if (empty($sandbox)) {
     $context['finished'] = 0;
@@ -96,41 +98,24 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $context['finished'] = 1;
   }
   else {
-    $execution_time_start = microtime(TRUE);
-    $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
-    $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
-    // Let's make an object wheeeee.
-    $tuque = islandora_get_tuque_connection();
-    $object = $tuque->repository->constructObject($namespace);
-    $completed = $sandbox['completed'] + 1;
-    $object->label = "Hat #" . $completed;
-    $object->owner = $user->name;
-    $object->models = (array) $model;
-    $tuque->repository->ingestObject($object);
-    $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection);
+    for ($i = 0; $i < $bucket_size || $context['finished'] >= 1; $i++) {
+      $execution_time_start = microtime(TRUE);
+      $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
+      $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
+      // Let's make an object wheeeee.
+      $tuque = islandora_get_tuque_connection();
+      $object = $tuque->repository->constructObject($namespace);
+      $completed = $sandbox['completed'] + 1;
+      $object->label = "Hat #" . $completed;
+      $object->owner = $user->name;
+      $object->models = (array) $model;
+      $tuque->repository->ingestObject($object);
+      $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection);
 
-    // Between ingest callbacks and results.
-    if (isset($sandbox['callbacks']['between_ingests'])) {
-      foreach ($sandbox['callbacks']['between_ingests'] as $thing) {
-        $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox, $object);
-        if (!is_null($parsed_message)) {
-          foreach ($parsed_message as $message) {
-            $context['message'] = $message;
-          }
-        }
-      }
-    }
-    $execution_time = ten_million_with_a_hat_get_completion_time($execution_time_start);
-    $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection} with model $model in $execution_time.";
-
-    // Update the completed counter and see if we gotta do stuff.
-    $sandbox['completed']++;
-    // See if we're finished, and if we are, print all the finished messages.
-    $context['finished'] = $sandbox['completed'] / $sandbox['total'];
-    if ($context['finished'] === 1) {
-      if (isset($sandbox['callbacks']['after_batch'])) {
-        foreach ($sandbox['callbacks']['after_batch'] as $thing) {
-          $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
+      // Between ingest callbacks and results.
+      if (isset($sandbox['callbacks']['between_ingests'])) {
+        foreach ($sandbox['callbacks']['between_ingests'] as $thing) {
+          $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox, $object);
           if (!is_null($parsed_message)) {
             foreach ($parsed_message as $message) {
               $context['message'] = $message;
@@ -138,8 +123,27 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
           }
         }
       }
-      $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
-      $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
+      $execution_time = ten_million_with_a_hat_get_completion_time($execution_time_start);
+      $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection} with model $model in $execution_time.";
+
+      // Update the completed counter and see if we gotta do stuff.
+      $sandbox['completed']++;
+      // See if we're finished, and if we are, print all the finished messages.
+      $context['finished'] = $sandbox['completed'] / $sandbox['total'];
+      if ($context['finished'] === 1) {
+        if (isset($sandbox['callbacks']['after_batch'])) {
+          foreach ($sandbox['callbacks']['after_batch'] as $thing) {
+            $parsed_message = ten_million_with_a_hat_do_thing($thing, $sandbox);
+            if (!is_null($parsed_message)) {
+              foreach ($parsed_message as $message) {
+                $context['message'] = $message;
+              }
+            }
+          }
+        }
+        $completed_time = ten_million_with_a_hat_get_completion_time($sandbox['start_time']);
+        $context['message'] = "Ingested {$sandbox['total']} objects into the repository in $completed_time.";
+      }
     }
   }
 }
