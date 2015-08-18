@@ -98,7 +98,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $context['finished'] = 1;
   }
   else {
-    for ($i = 0; $i < $bucket_size || $context['finished'] >= 1; $i++) {
+    for ($i = 0; $i < $bucket_size && $context['finished'] < 1; $i++) {
       $execution_time_start = microtime(TRUE);
       $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
       $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
