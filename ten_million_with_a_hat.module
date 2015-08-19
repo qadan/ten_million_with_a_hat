@@ -18,11 +18,13 @@
  *   'pids' array of collection PIDs to perform the 'type' operation on.
  * @param string $namespace
  *   The namespace to assign to ingested objects.
+ * @param int $bucket_size
+ *   The number of items to ingest per iteration.
  *
  * @return array
  *   The batch array thingy.
  */
-function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set, $namespace) {
+function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set, $namespace, $bucket_size) {
   global $user;
   return array(
     'title' => t('Ten Million With A Hat Batch Ingest'),
@@ -33,7 +35,7 @@ function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set,
     'operations' => array(
       array(
         'ten_million_with_a_hat_ingest_batch_operation',
-        array($objects, $user, $cm_set, $collection_set, $namespace),
+        array($objects, $user, $cm_set, $collection_set, $namespace, $bucket_size),
       ),
     ),
   );
@@ -55,7 +57,7 @@ function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set,
  * @param array $context
  *   The batch context.
  */
-function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set, $collection_set, $namespace, &$context) {
+function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set, $collection_set, $namespace, $bucket_size, &$context) {
   $sandbox = &$context['sandbox'];
   if (empty($sandbox)) {
     $context['finished'] = 0;
@@ -94,8 +96,10 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $empty_pid_set_message = "No valid content models were found using the batch configuration.";
     $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
     $context['finished'] = 1;
+    return;
   }
-  else {
+
+  foreach (array_fill(0, min($bucket_size, $sandbox['total'] - $sandbox['completed']), NULL) as $item) {
     $execution_time_start = microtime(TRUE);
     $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
     $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
