@@ -41,7 +41,7 @@ function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set,
           $cm_set,
           $collection_set,
           $namespace,
-          $bucket_size
+          $bucket_size,
         ),
       ),
     ),
