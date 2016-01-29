@@ -35,7 +35,14 @@ function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set,
     'operations' => array(
       array(
         'ten_million_with_a_hat_ingest_batch_operation',
-        array($objects, $user, $cm_set, $collection_set, $namespace, $bucket_size),
+        array(
+          $objects,
+          $user,
+          $cm_set,
+          $collection_set,
+          $namespace,
+          $bucket_size,
+        ),
       ),
     ),
   );
