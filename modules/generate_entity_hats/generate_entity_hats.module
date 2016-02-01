@@ -1,0 +1,175 @@
+<?php
+
+/**
+ * @file
+ * Generates person and organization entities with scholar-compatible metadata.
+ *
+ * NOTE: This module relies on a currently-unmerged pull request:
+ * https://github.com/discoverygarden/ten_million_with_a_hat/pull/7
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function generate_entity_hats_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    array(
+      'callback' => 'generate_entity_hats_create_org_sandbox',
+      'sandbox' => TRUE,
+      'when' => 'before_batch',
+    ),
+    array(
+      'callback' => 'generate_entity_hats_add_metadata',
+      'when' => 'between_ingests',
+      'weight' => 52,
+      'sandbox' => TRUE,
+    ),
+  );
+}
+
+/**
+ * Callback to add the 'organizations' array to the sandbox.
+ */
+function generate_entity_hats_create_org_sandbox(&$sandbox) {
+  $sandbox['organizations'] = array();
+}
+
+/**
+ * Callback to add metadata to an entity.
+ *
+ * @param AbstractObject $object
+ *   The object to add metadata to. We check if it's an entity.
+ * @param array $sandbox
+ *   The batch context 'sandbox' array, so that we can get inside the
+ *   'organizations' array.
+ */
+function generate_entity_hats_add_metadata(AbstractObject $object, &$sandbox) {
+  // Check the content model. Bail if we don't care for it.
+  if (!in_array('islandora:personCModel', $object->models) && !in_array('islandora:organizationCModel', $object->models)) {
+    return;
+  }
+  // Get rid of MODS. We're makin' MADS, baby.
+  if (isset($object['MODS'])) {
+    $object->purgeDatastream('MODS');
+  }
+  // Do organizationCModel stuff, if it's that.
+  if (in_array('islandora:organizationCModel', $object->models)) {
+
+    // These are the variables we need to populate.
+    $vars_to_walk = array(
+      'department_name' => '',
+      'date_issued' => '',
+      'parent_school' => '',
+      'previous_name' => '',
+      'u2_identifier' => '',
+      'note' => '',
+    );
+    array_walk($vars_to_walk, 'mods_for_hats_spin_the_wheel_yay');
+    // I'm goddamn hilarious, people.
+    $bono = md5($vars_to_walk['u2_identifier']);
+    $url = str_replace(' ', '', $vars_to_walk['department_name']);
+
+    // Populate some XML.
+    $xml = <<<XML
+<?xml version="1.0"?>
+<mads xmlns="http://www.loc.gov/mads/v2" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mads="http://www.loc.gov/mads/v2">
+  <authority><name type="corporate"><namePart>{$vars_to_walk['department_name']}</namePart><namePart type="date">{$vars_to_walk['date_issued']}</namePart></name></authority>
+  <related type="parentOrg">
+    <name type="corporate">
+      <namePart>{$vars_to_walk['parent_school']}</namePart>
+    </name>
+  </related>
+  <related type="earlier">
+    <name type="corporate">
+      <namePart>{$vars_to_walk['previous_name']}</namePart>
+      <namePart type="date">{$vars_to_walk['date_issued']}</namePart>
+    </name>
+  </related>
+  <identifier type="u2">$bono</identifier>
+  <note type="historical">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras elementum sapien at turpis imperdiet, a venenatis mauris pellentesque. Nam vitae dapibus nunc, ut volutpat metus. Vivamus vel massa feugiat, lacinia tellus eu, semper urna. ({$vars_to_walk['note']})</note>
+  <url>http://www.$url.com</url>
+</mads>
+XML;
+  }
+  // If it's a person entity instead.
+  else {
+
+    // Establish some sets of things to populate.
+    $dates_to_walk = array(
+      'birth_date' => '',
+      'start_date' => '',
+      'end_date' => '',
+    );
+    $current_name = array(
+      'name_family' => '',
+      'name_given' => '',
+    );
+    $alternate_name = array(
+      'name_family' => '',
+      'name_given' => '',
+    );
+    $vars_to_walk = array(
+      'backup_organization' => '',
+      'position' => '',
+      'research_interest_1' => '',
+      'research_interest_2' => '',
+      'research_interest_3' => '',
+      'bio' => '',
+      'note' => '',
+      'identifier' => '',
+      'office' => '',
+    );
+
+    // Randomize them.
+    array_walk($dates_to_walk, 'generate_entity_hats_get_moar_dates');
+    array_walk($current_name, 'mods_for_hats_spin_the_wheel_yay');
+    array_walk($alternate_name, 'mods_for_hats_spin_the_wheel_yay');
+    array_walk($vars_to_walk, 'mods_for_hats_spin_the_wheel_yay');
+    if (empty($sandbox['organizations'])) {
+      $department = $vars_to_walk['backup_organization'];
+    }
+    else {
+      $department = ten_million_with_a_hat_get_random_array_member($sandbox['organizations']);
+    }
+    $phone = "1-(" . rand(111, 999) . ")-" . rand(111, 999) . "-" . rand(1111, 9999);
+    $identifier = md5($vars_to_walk['identifier']);
+    $url = str_replace(' ', '', $department) . ".com";
+    $email = strtolower(str_replace(' ', '', "{$current_name['name_given']}{$current_name['name_family']}")) . "@$url";
+    // Populate some XML.
+    $xml = <<<XML
+<?xml version="1.0"?>
+<mads xmlns="http://www.loc.gov/mads/v2" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:mads="http://www.loc.gov/mads/v2">
+  <authority><name type="personal"><namePart type="given">{$current_name['name_given']}</namePart><namePart type="family">{$current_name['name_family']}</namePart><namePart type="date">{$dates_to_walk['birth_date']}</namePart></name><titleInfo><title>{$current_name['name_given']} {$current_name['name_family']}</title></titleInfo></authority>
+  <variant><name><namePart type="given">{$alternate_name['name_given']}</namePart><namePart type="family">{$alternate_name['name_family']}</namePart></name></variant>
+  <affiliation><organization>$department</organization><position>{$vars_to_walk['position']}</position><email>$email</email><phone>$phone</phone><dateValid point="start">{$dates_to_walk['start_date']}</dateValid><dateValid point="end">{$dates_to_walk['end_date']}</dateValid></affiliation>
+  <fieldOfActivity>{$vars_to_walk['research_interest_1']}</fieldOfActivity>
+  <fieldOfActivity>{$vars_to_walk['research_interest_2']}</fieldOfActivity>
+  <fieldOfActivity>{$vars_to_walk['research_interest_3']}</fieldOfActivity>
+  <identifier type="u1">$identifier</identifier>
+  <note type="status">current</note>
+  <note type="history">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras elementum sapien at turpis imperdiet, a venenatis mauris pellentesque. Nam vitae dapibus nunc, ut volutpat metus. Vivamus vel massa feugiat, lacinia tellus eu, semper urna. ({$vars_to_walk['bio']})</note>
+  <note>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras elementum sapien at turpis imperdiet, a venenatis mauris pellentesque. Nam vitae dapibus nunc, ut volutpat metus. Vivamus vel massa feugiat, lacinia tellus eu, semper urna. ({$vars_to_walk['note']})</note>
+  <note type="address">{$vars_to_walk['office']}</note>
+  <url>http://$url</url>
+</mads>
+XML;
+  }
+
+  // Finally, create a MADS with the randomized metadata.
+  $datastream = $object->constructDatastream('MADS');
+  $datastream->label = 'MADS Metadata';
+  $datastream->mimeType = 'text/xml';
+  $datastream->setContentFromString($xml);
+  $object->ingestDatastream($datastream);
+}
+
+/**
+ * Special functionality to get better random dates.
+ *
+ * @param string $text
+ *   A string of date text to add a date to.
+ */
+function generate_entity_hats_get_moar_dates(&$text) {
+  $date = mt_rand(0, time());
+  $text = date('Y-m-d', $date);
+}

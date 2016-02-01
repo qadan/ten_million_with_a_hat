@@ -96,7 +96,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $empty_pid_set_message = "No valid content models were found using the batch configuration.";
     $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
     $context['finished'] = 1;
-    return;
+  return;
   }
 
   foreach (array_fill(0, min($bucket_size, $sandbox['total'] - $sandbox['completed']), NULL) as $item) {
@@ -106,8 +106,14 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     // Let's make an object wheeeee.
     $tuque = islandora_get_tuque_connection();
     $object = $tuque->repository->constructObject($namespace);
-    $completed = $sandbox['completed'] + 1;
-    $object->label = "Hat #" . $completed;
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ';
+    $character_length = strlen($characters);
+    $random_string = '';
+    $length = 10;
+    for ($i = 0; $i < $length; $i++) {
+        $random_string .= $characters[rand(0, $character_length - 1)];
+    }
+    $object->label = $random_string . "Hat ";
     $object->owner = $user->name;
     $object->models = (array) $model;
     $tuque->repository->ingestObject($object);
