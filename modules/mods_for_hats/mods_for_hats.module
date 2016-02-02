@@ -218,15 +218,17 @@ function mods_for_hats_spin_the_wheel_yay(&$text, $key) {
           'On t\'a bercé trop près du mur?',
           'Pouvez-vous me dire où je pourrai acheter du fromage,',
         );
-        $query = db_select('entries');
-        $query->fields('entries', array('word', 'definition'));
-        $result = $query->execute();
-        $words = array();
-        foreach ($result as $record) {
-          $words[] = $record->word;
-          $words[] = $record->definition;
+        if(db_table_exists('entries')) {
+          $query = db_select('entries');
+          $query->fields('entries', array('word', 'definition'));
+          $result = $query->execute();
+          $words = array();
+          foreach ($result as $record) {
+            $words[] = $record->word;
+            $words[] = $record->definition;
+          }
+          $random_text = array_merge($random_text, $words);
         }
-        $random_text = array_merge($random_text, $words);
       break;
     }
     $text = ten_million_with_a_hat_get_random_array_member($random_text);
