@@ -46,11 +46,12 @@ function bespoke_hats_drush_command() {
  */
 function drush_bespoke_hats_ingest() {
   module_load_include('inc', 'ten_million_with_a_hat', 'ten_million_with_a_hat.drush');
+  // XXX: The first three parameters are set here because
+  // ten_million_with_a_hat_ingest_batch requires them; they will eventually be
+  // overridden by bespoke_hats_prepare_sandbox. Opting to do this way instead
+  // of rolling a custom batch or overhauling the existing one.
   batch_set(ten_million_with_a_hat_ingest_batch(
     0,
-    // Minorly hack-ish; a restriction or exclusion array of some kind needs to
-    // be set, otherwise the batch will exit as it assumes it has nowhere to
-    // put things.
     array(
       'type' => 'exclude',
       'pids' => array('dummy:pid'),
