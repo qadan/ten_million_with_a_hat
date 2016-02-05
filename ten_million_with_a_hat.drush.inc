@@ -26,8 +26,8 @@ function ten_million_with_a_hat_drush_command() {
       ),
       'options' => array(
         'objects' => array(
-          'description' => dt('The number of objects to create.'),
-          'required' => TRUE,
+          'description' => dt('The number of objects to create. Defaults to 100.'),
+          'required' => FALSE,
         ),
         'exclude-cms' => array(
           'description' => dt('A comma-separated list of PIDs of solution packs to exclude. Defaults to islandora:collectionCModel, unless "restrict-cms" is set.'),
@@ -65,7 +65,7 @@ function drush_ten_million_with_a_hat_ingest() {
   $cm_set = drush_ten_million_with_a_hat_get_restriction_or_exclusion_array('cms');
   $collection_set = drush_ten_million_with_a_hat_get_restriction_or_exclusion_array('collections');
   batch_set(ten_million_with_a_hat_ingest_batch(
-    drush_get_option('objects'),
+    drush_get_option('objects', 100),
     $cm_set,
     $collection_set,
     drush_get_option('namespace', 'islandora'),

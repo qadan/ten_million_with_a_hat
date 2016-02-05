@@ -20,11 +20,13 @@
  *   The namespace to assign to ingested objects.
  * @param int $bucket_size
  *   The number of items to ingest per iteration.
+ * @param array $additional_params
+ *   An associative array whose keys and values will be added to the sandbox.
  *
  * @return array
  *   The batch array thingy.
  */
-function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set, $namespace, $bucket_size) {
+function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set, $namespace, $bucket_size, $additional_params = array()) {
   global $user;
   return array(
     'title' => t('Ten Million With A Hat Batch Ingest'),
@@ -42,6 +44,7 @@ function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set,
           $collection_set,
           $namespace,
           $bucket_size,
+          $additional_params,
         ),
       ),
     ),
@@ -61,10 +64,12 @@ function ten_million_with_a_hat_ingest_batch($objects, $cm_set, $collection_set,
  *   The collection set array defined by ten_million_with_a_hat_ingest_batch.
  * @param string $namespace
  *   The namespace to assign to ingested objects.
+ * @param array $additional_params
+ *   An associative array of additional parameters to be added to the sandbox.
  * @param array $context
  *   The batch context.
  */
-function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set, $collection_set, $namespace, $bucket_size, &$context) {
+function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set, $collection_set, $namespace, $bucket_size, $additional_params = array(), &$context) {
   $sandbox = &$context['sandbox'];
   if (empty($sandbox)) {
     $context['finished'] = 0;
@@ -72,6 +77,11 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $sandbox['completed'] = 0;
     $sandbox['total'] = $objects;
     $sandbox['models'] = ten_million_with_a_hat_get_model_pid_array($cm_set, $collection_set);
+    // In case this is needed by a submodule.
+    $sandbox['namespace'] = $namespace;
+    foreach ($additional_params as $key => $value) {
+      $sandbox[$key] = $value;
+    }
     if (!empty($sandbox['models'])) {
       $sandbox['callbacks'] = module_invoke_all('ten_million_with_a_hat_also_do_these_things');
       // Sort and categorize the other stuff.
@@ -102,6 +112,13 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $empty_repository_message = "For some reason, no valid content models were found in your repository, so no objects will be ingested.";
     $empty_pid_set_message = "No valid content models were found using the batch configuration.";
     $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
+    $context['finished'] = 1;
+    return;
+  }
+
+  // Exit if no objects are to be made.
+  if ($sandbox['total'] < 1) {
+    $context['message'] = "Nothing to do; exiting.";
     $context['finished'] = 1;
     return;
   }
