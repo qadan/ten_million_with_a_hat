@@ -21,6 +21,7 @@ function bespoke_hats_drush_command() {
         'islandora',
         'islandora_basic_collection',
         'ten_million_with_a_hat',
+        'bespoke_hats',
       ),
       'options' => array(
         'manifest' => array(

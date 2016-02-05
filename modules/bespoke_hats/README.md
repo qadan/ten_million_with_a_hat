@@ -27,7 +27,7 @@ The result should look something like this:
     "parent_pid": "islandora:root",
     "models": {
       "islandora:sp_basic_image": 1000,
-      "islandora:sp_large_image": 500,
+      "islandora:sp_large_image": 500
     }
   },
   {
@@ -36,7 +36,7 @@ The result should look something like this:
     "parent_pid": "collection:1",
     "models": {
       "islandora:sp-audioCModel": 250,
-      "islandora:sp_videoCModel": 400,
+      "islandora:sp_videoCModel": 400
     }
   }
 ]
@@ -45,6 +45,10 @@ The result should look something like this:
 *NOTE*: using existing collections in the JSON can overwrite their content models, labels and parent relationships. Use caution here.
 
 Who am I kidding, this is supposed to be test data. Don't use this on production servers, kids.
+
+## Customization
+
+Check the README.md for `ten_million_with_a_hat` for customization details.
 
 ## Troubleshooting/Issues
 
