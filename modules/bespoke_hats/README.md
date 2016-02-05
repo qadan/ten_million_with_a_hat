@@ -44,6 +44,8 @@ The result should look something like this:
 
 *NOTE*: using existing collections in the JSON can overwrite their content models, labels and parent relationships. Use caution here.
 
+Who am I kidding, this is supposed to be test data. Don't use this on production servers, kids.
+
 ## Troubleshooting/Issues
 
 Having problems or solved a problem? Contact [discoverygarden](http://support.discoverygarden.ca).
