@@ -38,7 +38,7 @@ function derivatives_for_hats_generate_derivatives(AbstractObject $object) {
     $options = array(
       'source_dsid' => 'OBJ',
     );
-    $hooks = islandora_invoke_hook_list(ISLANDORA_DERVIATIVE_CREATION_HOOK, $object->models, array($object));
+    $hooks = islandora_invoke_hook_list(ISLANDORA_DERIVATIVE_CREATION_HOOK, $object->models, array($object));
     uasort($hooks, 'drupal_sort_weight');
     $hooks = islandora_filter_derivatives($hooks, $options, $object);
     foreach ($hooks as $hook) {

@@ -1,0 +1,40 @@
+<?php
+
+/**
+ * @file
+ * Defines the hooki implementations for bespoke_hats.
+ */
+
+/**
+ * Implements hook_ten_million_with_a_hat_also_do_these_things().
+ */
+function bespoke_hats_ten_million_with_a_hat_also_do_these_things() {
+  $utilities = array(
+    'type' => 'inc',
+    'module' => 'bespoke_hats',
+    'path' => 'includes/utilities',
+  );
+  return array(
+    array(
+      'file' => $utilities,
+      'callback' => 'bespoke_hats_ingest_parents',
+      'weight' => -1,
+      'when' => 'before_batch',
+      'sandbox' => TRUE,
+    ),
+    array(
+      'file' => $utilities,
+      'callback' => 'bespoke_hats_prepare_sandbox',
+      'weight' => -2,
+      'when' => 'before_batch',
+      'sandbox' => TRUE,
+    ),
+    array(
+      'file' => $utilities,
+      'callback' => 'bespoke_hats_update_sandbox',
+      'weight' => -1,
+      'when' => 'between_ingests',
+      'sandbox' => TRUE,
+    ),
+  );
+}

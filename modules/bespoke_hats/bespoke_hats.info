@@ -1,0 +1,7 @@
+name = Bespoke Hats
+description = Allows the ingest parameters to be defined by a JSON manifest
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = islandora_basic_collection
+package = Ten Million with a Hat

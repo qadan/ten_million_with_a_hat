@@ -17,7 +17,7 @@ Some notes on the Drush options: by default, the islandora:collectionCModel is e
 
 ## Customization
 
-A hook is available, `hook_ten_million_with_a_hat_also_do_these_things`, to modify each ingested object. Check ten_million_with_a_hat.api.php for more details. Also take a look at the 'modules' folder provided by this repository for example implementations that may be appropriate to your use case.
+By default, Ten Million with a Hat ingests stub objects with no metadata. A hook is available, `hook_ten_million_with_a_hat_also_do_these_things`, to modify each ingested object. Check ten_million_with_a_hat.api.php for more details. Also take a look at the 'modules' folder provided by this repository for example implementations that may be appropriate to your use case.
 
 Some additional modules that implement this hook are maintained in private repositories, as they work with Islandora extensions that are either privately maintained or otherwise inappropriate to place in a public repository. Contact [QA Dan](daitken@discoverygarden.ca) for details.
 
