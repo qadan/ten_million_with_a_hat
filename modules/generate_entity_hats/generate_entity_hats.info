@@ -1,0 +1,9 @@
+name = Generate Entity Hats
+description = Populates the repository with Entity objects only
+core = 7.x
+version = 7.x-dev
+dependencies[] = ten_million_with_a_hat
+dependencies[] = mods_for_hats
+dependencies[] = update_hat_dc
+dependencies[] = islandora_entities
+package = Ten Million with a Hat

@@ -1,0 +1,71 @@
+<?php
+
+/**
+ * @file
+ * Adds random collections during the ingest process.
+ */
+
+/**
+ * Implements ten_million_with_a_hat_also_do_these_things().
+ */
+function extra_hat_collections_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    array(
+      'when' => 'before_batch',
+      'sandbox' => TRUE,
+      'callback' => 'extra_hat_collections_enable_collection_sp',
+    ),
+    array(
+      'when' => 'between_ingests',
+      'sandbox' => TRUE,
+      'callback' => 'extra_hat_collections_complete_collections',
+    ),
+  );
+}
+
+/**
+ * Adds the collection solution pack to the valid models if it hasn't been.
+ *
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
+ *
+ * @return string
+ *   A message saying whether or not the collection content model was added.
+ */
+function extra_hat_collections_enable_collection_sp(&$sandbox) {
+  if (!isset($sandbox['models']['islandora:collectionCModel'])) {
+    $sandbox['models']['islandora:collectionCModel'] = array('islandora:root');
+    return t("The Islandora basic collection content model has been added to the available models, with islandora:root as the destination.");
+  }
+  return t("Extra Hat Collections: The islandora basic collection content model was already found in the available models, so it was not added.");
+}
+
+/**
+ * Adds completed collection policies to ingested collection objects.
+ *
+ * Also adds new collections to the sandbox 'models' array.
+ *
+ * @param AbstractObject $object
+ *   The potential collection to add the policy to.
+ * @param array $sandbox
+ *   The batch $context['sandbox'] array, passed in by reference.
+ *
+ * @return string
+ *   A string message saying what content model was added to the collection.
+ */
+function extra_hat_collections_complete_collections(AbstractObject $object, &$sandbox) {
+  if (in_array('islandora:collectionCModel', $object->models) && !isset($object['COLLECTION_POLICY'])) {
+    $valid_models = array_diff(array_keys($sandbox['models']), array('islandora:collectionCModel'));
+    if (!empty($valid_models)) {
+      $model = islandora_object_load(ten_million_with_a_hat_get_random_array_member($valid_models));
+      $policy = CollectionPolicy::emptyPolicy();
+      $pid_parts = explode(':', $model->id);
+      $policy->addContentModel($model->id, $model->label, $pid_parts[0]);
+      $policy_datastream = $object->constructDatastream('COLLECTION_POLICY');
+      $policy_datastream->setContentFromString($policy->getXML());
+      $object->ingestDatastream($policy_datastream);
+      $sandbox['models'][$model->id][] = $object->id;
+      return "The $model->id content model was added to collection object $object->id.";
+    }
+  }
+}
