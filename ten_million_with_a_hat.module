@@ -113,7 +113,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $empty_pid_set_message = "No valid content models were found using the batch configuration.";
     $context['message'] = $sets_were_unconfigured ? $empty_repository_message : $empty_pid_set_message;
     $context['finished'] = 1;
-  return;
+    return;
   }
 
   // Exit if no objects are to be made.
@@ -135,9 +135,9 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     $random_string = '';
     $length = 10;
     for ($i = 0; $i < $length; $i++) {
-        $random_string .= $characters[rand(0, $character_length - 1)];
+      $random_string .= $characters[rand(0, $character_length - 1)];
     }
-    $object->label = $random_string . "Hat ";
+    $object->label = $random_string;
     $object->owner = $user->name;
     $object->models = (array) $model;
     $tuque->repository->ingestObject($object);
