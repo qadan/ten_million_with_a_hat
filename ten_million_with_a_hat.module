@@ -130,6 +130,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     // Let's make an object wheeeee.
     $tuque = islandora_get_tuque_connection();
     $object = $tuque->repository->constructObject($namespace);
+    $completed = $sandbox['completed'] + 1;
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ';
     $character_length = strlen($characters);
     $random_string = '';
