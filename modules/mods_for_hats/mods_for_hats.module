@@ -224,8 +224,8 @@ function mods_for_hats_spin_the_wheel_yay(&$text, $key) {
           $result = $query->execute();
           $words = array();
           foreach ($result as $record) {
-            $words[] = $record->word;
-            $words[] = $record->definition;
+            $words[] = htmlspecialchars($record->word);
+            $words[] = htmlspecialchars($record->definition);
           }
           $random_text = array_merge($random_text, $words);
         }
