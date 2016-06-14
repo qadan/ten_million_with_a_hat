@@ -124,12 +124,10 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
   }
 
   foreach (array_fill(0, min($bucket_size, $sandbox['total'] - $sandbox['completed']), NULL) as $item) {
-    $execution_time_start = microtime(TRUE);
     $model = ten_million_with_a_hat_get_random_array_member(array_keys($sandbox['models']));
     $collection = ten_million_with_a_hat_get_random_array_member($sandbox['models'][$model]);
     // Let's make an object wheeeee.
     $tuque = islandora_get_tuque_connection();
-    $object = $tuque->repository->constructObject($namespace);
     $completed = $sandbox['completed'] + 1;
     $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ ';
     $character_length = strlen($characters);
@@ -138,11 +136,13 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
     for ($i = 0; $i < $length; $i++) {
       $random_string .= $characters[rand(0, $character_length - 1)];
     }
+    $execution_time_start = microtime(TRUE);
+    $object = $tuque->repository->constructObject($namespace);
     $object->label = $random_string;
     $object->owner = $user->name;
     $object->models = (array) $model;
-    $tuque->repository->ingestObject($object);
     $object->relationships->add(FEDORA_RELS_EXT_URI, 'isMemberOfCollection', $collection);
+    $tuque->repository->ingestObject($object);
 
     // Between ingest callbacks and results.
     if (isset($sandbox['callbacks']['between_ingests'])) {
@@ -155,6 +155,7 @@ function ten_million_with_a_hat_ingest_batch_operation($objects, $user, $cm_set,
         }
       }
     }
+
     $execution_time = ten_million_with_a_hat_get_completion_time($execution_time_start);
     $context['message'] = "$completed/{$sandbox['total']}: Ingested {$object->id} into {$collection} with model $model in $execution_time.";
 
