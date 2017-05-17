@@ -218,7 +218,7 @@ function mods_for_hats_spin_the_wheel_yay(&$text, $key) {
           'On t\'a bercé trop près du mur?',
           'Pouvez-vous me dire où je pourrai acheter du fromage,',
         );
-        if(db_table_exists('entries')) {
+        if (db_table_exists('entries')) {
           $query = db_select('entries');
           $query->fields('entries', array('word', 'definition'));
           $result = $query->execute();
