@@ -1,4 +1,5 @@
-# Ten Million with a Hat
+# Ten Million with a Hat [![Build Status](https://travis-ci.org/discoverygarden/ten_million_with_a_hat.png?branch=7.x)](https://travis-ci.org/discoverygarden/ten_million_with_a_hat)
+
 
 ## Introduction
 
