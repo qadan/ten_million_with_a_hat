@@ -1,0 +1,29 @@
+<?php
+
+/**
+ * @file
+ * TMHI implementation, policy maker.
+ */
+
+/**
+ * Implements ten_million_with_a_hat_also_do_these_things().
+ */
+function policies_for_hats_ten_million_with_a_hat_also_do_these_things() {
+  return array(
+    array(
+      'callback' => 'policies_for_hats_add_empty_policy',
+      'when' => 'between_ingests'
+    ),
+  );
+}
+
+/**
+ * Empty policy adder.
+ *
+ * @param AbstractObject $object
+ *   The object to add a POLICY to.
+ */
+function policies_for_hats_add_empty_policy(AbstractObject $object) {
+  $xacml = new IslandoraXacml($object);
+  $xacml->writeBackToFedora();
+}
